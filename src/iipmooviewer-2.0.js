@@ -3,6 +3,7 @@
    IIPImage Javascript Viewer <http://iipimage.sourceforge.net>
 
    Copyright (c) 2007-2012 Ruven Pillay <ruven@users.sourceforge.net>
+   Copyright (c) 2012 Chiara Marmo <cmarmo@users.sourceforge.net>
 
    ---------------------------------------------------------------------------
 
@@ -45,12 +46,18 @@
               render: tile rendering style - 'spiral' for a spiral from the centre or
                       'random' for a rendering of tiles in a random order
 	      scale: pixels per mm
+	      deg: whether units are sexagesimal degrees or not (default false)
 	      showNavWindow: whether to show the navigation window. Default true
 	      showNavButtons: whether to show the navigation buttons. Default true
 	      protocol: iip (default), zoomify or deepzoom
 	      enableFullscreen: allow full screen mode. Default true
 	      viewport: object containing x, y, resolution, rotation of initial view
 	      winResize: whether view is reflowed on window resize. Default true
+              showOpacityControl: whether to show opacity control: false, true or global. Default false. 
+              showContrastControl: whether to show contrast control: false, true or global. Default false.
+              showGammaControl: whether to show gamma control: false, true or global. Default false.
+              showMiMaxControl: whether to show min max control: Default false.
+              enableColorComposition: whether to composite images: Default false.
 
    Note: Requires mootools version 1.4 or later <http://www.mootools.net>
        : The page MUST have a standard-compliant HTML declaration at the beginning
@@ -85,6 +92,7 @@ var IIPMooViewer = new Class({
 	resolution: (typeof(options.viewport.resolution)=='undefined') ? null : parseInt(options.viewport.resolution),
 	rotation: (typeof(options.viewport.rotation)=='undefined') ? null : parseInt(options.viewport.rotation),
 	contrast: (typeof(options.viewport.contrast)=='undefined') ? null : parseInt(options.viewport.contrast),
+	gamma: (typeof(options.viewport.gamma)=='undefined') ? null : parseInt(options.viewport.gamma),
 	x: (typeof(options.viewport.x)=='undefined') ? null : parseFloat(options.viewport.x),
 	y: (typeof(options.viewport.y)=='undefined') ? null : parseFloat(options.viewport.y)
       }
@@ -94,12 +102,19 @@ var IIPMooViewer = new Class({
     options.image || alert( 'Image location not set in class constructor options');
     if( typeOf(options.image) == 'array' ){
        for( i=0; i<options.image.length;i++ ){
-	 this.images[i] = { src:options.image[i], sds:"0,90", cnt:(this.viewport&&this.viewport.contrast!=null)? this.viewport.contrast : 1.0 };
-
-
+	 this.images[i] = { src:options.image[i], sds:"0,90",
+              cnt:(this.viewport&&this.viewport.contrast!=null)? this.viewport.contrast : 1.0,
+              gamma:(this.viewport&&this.viewport.gamma!=null)? this.viewport.gamma : 0.45,
+              opacity:(options.image[i].opacity!=null)? options.image[i].opacity : 0.0,
+              color:(options.image[i].color!=null)? options.image[i].color : [1, 1, 1]};
        }
+       this.images[0].opacity = 1;
     }
-    else this.images = [{ src:options.image, sds:"0,90", cnt:(this.viewport&&this.viewport.contrast!=null)? this.viewport.contrast : 1.0 } ];
+    else this.images = [{ src:options.image, sds:"0,90",
+              cnt:(this.viewport&&this.viewport.contrast!=null)? this.viewport.contrast : 1.0,
+              gamma:(this.viewport&&this.viewport.gamma!=null)? this.viewport.gamma : 0.45,
+              opacity:(options.image.opacity!=null)? options.image.opacity : 1.0,
+              color:(options.image.color!=null)? options.image.color : [1, 1, 1] } ];
 
     this.loadoptions = options.load || null;
 
@@ -107,6 +122,7 @@ var IIPMooViewer = new Class({
 
     this.scale = options.scale || null;
 
+    this.deg = options.deg || false;
 
     // Enable fullscreen mode? If false, then disable. Otherwise option can be "native" for HTML5
     // fullscreen API mode or "page" for standard web page fill page mode
@@ -134,6 +150,23 @@ var IIPMooViewer = new Class({
     this.showNavButtons = (options.showNavButtons == false) ? false : true;
     this.navWinSize = options.navWinSize || 0.2;
 
+    // Show contrast controls
+    this.showContrastControl = options.showContrastControl || false;
+
+    // Show gamma controls
+    this.showGammaControl = options.showGammaControl || false;
+
+    // Show min max controls
+    this.showMinMaxControl = (options.showMinMaxControl == true) ? true : false;
+
+    // Show opacity controls
+    this.showOpacityControl = options.showOpacityControl || false;
+
+    // Enable Image color composition
+    this.enableColorComposition = (options.enableColorComposition == true) ? true : false;
+
+    // Show Layer switch
+    this.showLayerSwitch = (options.showLayerSwitch == true) ? true : false;
 
     this.winResize = (options.winResize==false)? false : true;
 
@@ -232,7 +265,7 @@ var IIPMooViewer = new Class({
     // Create new annotations and attach the tooltip to them if it already exists
     if( this.annotations ){
       this.createAnnotations();
-      if( this.annotationTip ) this.annotationTip.attach( this.canvas.getChildren('div.annotation') );
+      //if( this.annotationTip ) this.annotationTip.attach( this.canvas.getChildren('div.annotation') );
     }
   },
 
@@ -316,10 +349,16 @@ var IIPMooViewer = new Class({
     }
 
     this.nTilesLoaded = 0;
-    this.nTilesToLoad = ntiles * this.images.length;
+    this.nTilesToLoad = 0;
+    for (var oo=0; oo<this.images.length; oo++)
+      if (this.images[oo].opacity) this.nTilesToLoad++;
+    this.nTilesToLoad *= ntiles;
+
+    // If color composition is on reinitialize colorcanvas 
+    if (this.enableColorComposition) this.colorcanvas.width = this.colorcanvas.width;
 
     // Delete the tiles from our old image mosaic which are not in our new list of tiles
-    this.canvas.get('morph').cancel();
+    /*this.canvas.get('morph').cancel();
     var _this = this;
     this.canvas.getChildren('img').each( function(el){
       var index = parseInt(el.retrieve('tile'));
@@ -327,7 +366,7 @@ var IIPMooViewer = new Class({
         el.destroy();
 	_this.tiles.erase(index);
       }
-    });
+    });*/
 
     map.sort(function s(a,b){return a.n - b.n;});
 
@@ -339,68 +378,102 @@ var IIPMooViewer = new Class({
       // Sequential index of the tile in the tif image
       k = i + (j*xtiles);
 
-      if( this.tiles.contains(k) ){
+      /*if( this.tiles.contains(k) ){
 	this.nTilesLoaded += this.images.length;
         if( this.showNavWindow ) this.refreshLoadBar(); 
 	if( this.nTilesLoaded >= this.nTilesToLoad ) this.canvas.setStyle( 'cursor', 'move' );
 	continue;
-      }
+      }*/
 
       // Iterate over the number of layers we have
       var n;
       for(n=0;n<this.images.length;n++){
+	if (this.images[n].opacity) {
 
-        var tile = new Element('img', {
+          var tile = new Image();
+	  tile.set('left', i*this.tileSize.w);
+	  tile.set('top', j*this.tileSize.h);
+	  tile.set('z-index', n);
+        
+	/*var tile = new Element('img', {
           'class': 'layer'+n,
           'styles': {
 	    left: i*this.tileSize.w,
 	    top: j*this.tileSize.h
           }
-        });
-	// Move this out of the main constructor to avoid DOM attribute bloat
-	if( this.effects ) tile.setStyle('opacity',0.1);
+        });*/
 
-	// Inject into our canvas
-	tile.inject(this.canvas);
+	  // Move this out of the main constructor to avoid DOM attribute bloat
+	  //if( this.effects ) tile.setStyle('opacity',0.1);
 
-	// Get tile URL from our protocol object
-	var src = this.protocol.getTileURL( this.server, this.images[n].src, this.view.res, this.images[n].sds, this.images[n].cnt, k, i, j );
+	  // Inject into our canvas
+	  //tile.inject(this.canvas);
 
-	// Add our tile event functions after injection otherwise we get no event
-	tile.addEvents({
-	  'load': function(tiles){
-	     var tile = tiles[0];
-	     var id = tiles[1];
-	     if( this.effects ) tile.setStyle('opacity',1);
-	     if(!(tile.width&&tile.height)){
-	       tile.fireEvent('error');
-	       return;
-	     }
-	     this.nTilesLoaded++;
-	     if( this.showNavWindow ) this.refreshLoadBar();
-	     if( this.nTilesLoaded >= this.nTilesToLoad ) this.canvas.setStyle( 'cursor', 'move' );
-	     this.tiles.push(id); // Add to our list of loaded tiles
-	  }.bind(this,[tile,k]),
-	  'error': function(){
-	     // Try to reload if we have an error.
-	     // Add a suffix to prevent caching, but remove error event to avoid endless loops
-	     this.removeEvents('error');
-	     var src = this.src;
-	     this.set( 'src', src + '?'+ Date.now() );
-	  }
-	});
+	  // Get tile URL from our protocol object
+          var minmin = '';
+          var maxmax = '';
+          if (this.images[n].minarray) minmin = this.images[n].minarray[0];
+          if (this.images[n].maxarray) maxmax = this.images[n].maxarray[0];
+	  var src = this.protocol.getTileURL( this.server, this.images[n].src, this.view.res, this.images[n].sds, minmin, maxmax, this.images[n].cnt, this.images[n].gamma, k, i, j );
 
-	// We must set the source at the end so that the 'load' function is properly fired
-	tile.set( 'src', src );
-	tile.store('tile',k);
+	  // Add our tile event functions after injection otherwise we get no event
+	  tile.addEvents({
+	    'load': function(tiles){
+	       var tile = tiles[0];
+	       var id = tiles[1];
+	       var nl = tile.get('z-index');
+	       //if( this.effects ) tile.setStyle('opacity',1);
+	       if(!(tile.width&&tile.height)){
+	         tile.fireEvent('error');
+	         return;
+	       }
+
+               /* applying color map  */
+	       if (this.enableColorComposition) {
+                 this.tmpcontext.drawImage(tile,0,0);
+	         var tmpimdata = this.tmpcontext.getImageData(0,0,tile.width, tile.height);
+	         var tmpdata = tmpimdata.data;
+	         var imdata = this.colorcontext.getImageData(tile.get('left'),tile.get('top'),tile.width, tile.height);
+	         var data = imdata.data;
+	         for (j=0, nd=data.length; j<nd ; j+=4) {
+ 	           tmpdata[j] = data[j]+tmpdata[j]*(_this.images[nl].color)[0];
+	           tmpdata[j+1] = data[j+1]+tmpdata[j+1]*(_this.images[nl].color)[1];
+	           tmpdata[j+2] = data[j+2]+tmpdata[j+2]*(_this.images[nl].color)[2];
+	         }
+	         this.colorcontext.putImageData(tmpimdata,tile.get('left'),tile.get('top'));
+                 this.tmpcanvas.width = this.tmpcanvas.width;
+	       } else this.context.drawImage(tile,tile.get('left'),tile.get('top'));
+
+	       this.nTilesLoaded++;
+	       if( this.showNavWindow ) this.refreshLoadBar();
+	       if( this.nTilesLoaded >= this.nTilesToLoad ) this.canvas.setStyle( 'cursor', 'move' );
+	       this.tiles.push(id); // Add to our list of loaded tiles
+	       if ( this.enableColorComposition && (this.nTilesLoaded == this.nTilesToLoad) ) {
+    		 // Display color image from color buffer
+		 colordata = this.colorcontext.getImageData(0,0,this.colorcanvas.width, this.colorcanvas.height);
+		 this.context.putImageData(colordata,0,0);        
+	       }
+	    }.bind(this,[tile,k]),
+	    'error': function(){
+	       // Try to reload if we have an error.
+	       // Add a suffix to prevent caching, but remove error event to avoid endless loops
+	       this.removeEvents('error');
+	       var src = this.src;
+	       this.set( 'src', src + '?'+ Date.now() );
+	    }
+	  });
+
+	  // We must set the source at the end so that the 'load' function is properly fired
+	  tile.set( 'src', src );
+	  tile.store('tile',k);
+        }
       }
-
     }
 
-    if( this.images.length > 1 ){
+    /*if( this.images.length > 1 ){
       var selector = 'img.layer'+(n-1);
       this.canvas.getChildren(selector).setStyle( 'opacity', this.opacity );
-    }
+    }*/
 
   },
 
@@ -410,7 +483,7 @@ var IIPMooViewer = new Class({
   getRegionURL: function(){
     var w = this.resolutions[this.view.res].w;
     var h = this.resolutions[this.view.res].h;
-    var url = this.server + this.protocol.getRegionURL(this.images[0].src,this.view.x/w,this.view.y/h,this.view.w/w,this.view.h/h);
+    var url = this.server + this.protocol.getRegionURL(this.images[0].src,this.view.x/w,this.view.y/h,this.view.w/w,this.view.h/h,this.images[0].minarray[0],this.images[0].maxarray[0]);
     return url;
   },
 
@@ -850,16 +923,24 @@ var IIPMooViewer = new Class({
 
     this.canvas.setStyles({
       left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
-      top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2),
-      width: this.wid,
-      height: this.hei
+      top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
     });
+
+    this.canvas.set('width', this.wid);
+    this.canvas.set('height', this.hei);
+    if (this.enableColorComposition) {
+      this.colorcanvas.set('width', this.wid);
+      this.colorcanvas.set('height', this.hei);
+      this.tmpcanvas.set('width', this.tileSize.w);
+      this.tmpcanvas.set('height', this.tileSize.h);
+    }
 
     // Contstrain our canvas to our containing div
     this.constrain();
 
     // Delete our image tiles
-    this.canvas.getChildren('img').destroy();
+    //this.canvas.getChildren('img').destroy();
+    this.canvas.width = this.canvas.width;
 
     this.tiles.empty();
 
@@ -988,7 +1069,7 @@ var IIPMooViewer = new Class({
     }).inject( this.container );
 
     // Create our main window target div, add our events and inject inside the frame
-    this.canvas = new Element('div', {
+    /*this.canvasdiv = new Element('div', {
       'class': 'canvas',
       'morph': {
 	transition: Fx.Transitions.Quad.easeInOut,
@@ -996,7 +1077,18 @@ var IIPMooViewer = new Class({
 	  _this.requestImages();
 	}
       }
+    });*/
+    this.canvas = new Element('canvas', {
+      'id': 'images',
+      'styles': { 'position': 'absolute' },
+      'morph': {
+	transition: Fx.Transitions.Quad.easeInOut,
+	onComplete: function(){
+	  _this.requestImages();
+	}
+      }
     });
+    this.context = this.canvas.getContext("2d");
 
 
     // Create our main view drag object for our canvas.
@@ -1007,6 +1099,7 @@ var IIPMooViewer = new Class({
 
 
     // Inject our canvas into the container, but events need to be added after injection
+    //this.canvasdiv.inject( this.container );
     this.canvas.inject( this.container );
     this.canvas.addEvents({
       'mousewheel:throttle(75)': this.zoom.bind(this),
@@ -1018,6 +1111,29 @@ var IIPMooViewer = new Class({
     // Initialize canvas events for our annotations
     if( this.annotations ) this.initAnnotations();
 
+    // Add colormap controls if asked
+    if (this.enableColorComposition) {
+      this.colorcanvas = document.createElement('canvas');
+      this.colorcontext = this.colorcanvas.getContext('2d');
+      this.tmpcanvas = document.createElement('canvas');
+      this.tmpcontext = this.tmpcanvas.getContext('2d');
+      this.CreateColorPicker();
+    }
+
+    // Add contrast controls if asked
+    if (this.showContrastControl) this.CreateContrastControl();
+
+    // Add gamma controls if asked
+    if (this.showGammaControl) this.CreateGammaControl();
+
+    // Add min max controls if asked
+    if (this.showMinMaxControl) this.CreateMinMaxControl();
+
+    // Add layer switch if asked
+    if (this.showLayerSwitch) this.CreateLayerSwitch();
+
+    // Add opacity controls if asked
+    if (this.showOpacityControl) this.CreateOpacityControl();
 
     // Disable the right click context menu if requested and show our info window instead
     if( this.disableContextMenu ){
@@ -1248,10 +1364,14 @@ var IIPMooViewer = new Class({
  
 
     // Set the size of the canvas to that of the full image at the current resolution
-    this.canvas.setStyles({
-      width: this.wid,
-      height: this.hei
-    });
+    this.canvas.set('width', this.wid);
+    this.canvas.set('height', this.hei);
+    if (this.enableColorComposition) {
+      this.colorcanvas.set('width', this.wid);
+      this.colorcanvas.set('height', this.hei);
+      this.tmpcanvas.set('width', this.tileSize.w);
+      this.tmpcanvas.set('height', this.tileSize.h);
+    }
 
 
     // Load our images
@@ -1474,9 +1594,18 @@ var IIPMooViewer = new Class({
     var dims =   ["p", "n", "&#181;", "m", "c", "", "k"];
     var orders = [ 1e-12, 1e-9, 1e-6, 0.001, 0.01, 1, 1000 ];
     var mults = [1,2,5,10,50];
+    var fac = 1000;
+    var label = 'm';
 
+    if (this.deg) {
+	    var dims =   ["\'\'", "\'", "&deg"];
+	    var orders = [ 1/3600, 1/60, 1 ];
+	    var mults = [ 1 , 10 ,15, 30 ];
+	    var fac = 3600 / this.scale;
+	    label = '';
+    }
     // Determine the number of pixels a unit takes at this scale. x1000 because we want per m
-    var pixels = 1000 * this.scale * this.wid / this.max_size.w;
+    var pixels = fac * this.scale * this.wid / this.max_size.w;
 
     // Loop through until we get a good fit scale. Be careful to break fully from the outer loop
     var i, j;
@@ -1489,7 +1618,7 @@ var IIPMooViewer = new Class({
     if( i >= orders.length ) i = orders.length-1;
     if( j >= mults.length ) j = mults.length-1;
 
-    var label = mults[j] + dims[i] + 'm';
+    label = mults[j] + dims[i] + label;
     pixels = pixels*orders[i]*mults[j];
 
     // Use a smooth transition to resize and set the units
@@ -1602,7 +1731,8 @@ var IIPMooViewer = new Class({
 
     // First cancel any effects on the canvas and delete the tiles within
     this.canvas.get('morph').cancel();
-    this.canvas.getChildren('img').destroy();
+    //this.canvas.getChildren('canvas').destroy();
+    this.canvas.width = this.canvas.width;
     this.tiles.empty();
     this.calculateSizes();
 
@@ -1619,10 +1749,14 @@ var IIPMooViewer = new Class({
     }
     else this.recenter();
 
-    this.canvas.setStyles({
-      width: this.wid,
-      height: this.hei
-    });
+    this.canvas.set('width', this.wid);
+    this.canvas.set('height', this.hei);
+    if (this.enableColorComposition) {
+      this.colorcanvas.set('width', this.wid);
+      this.colorcanvas.set('height', this.hei);
+      this.tmpcanvas.set('width', this.tileSize.w);
+      this.tmpcanvas.set('height', this.tileSize.h);
+    }
 
 
     this.reflow();
@@ -1648,7 +1782,7 @@ var IIPMooViewer = new Class({
     var yoffset = Math.round( (this.hei-this.view.h)/2 );
     this.view.y = (yoffset<0)? 0 : yoffset;
 
-    // Center our canvas, taking into account images smaller than the viewport
+    // Center our canvasdiv, taking into account images smaller than the viewport
     this.canvas.setStyles({
       left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
       top : (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)

@@ -1,0 +1,67 @@
+/* controls window */
+div.controls {
+  padding: 3px;
+  background: #222;
+  opacity: 0.65;
+  cursor: default;
+  color: #bbb;
+  font-size: 65%;
+  font-weight: normal;
+  width: 20%;
+  position: absolute;
+  border: 4px inset grey;
+  min-width: 150px;
+}
+div.controls:hover {
+  opacity: 0.95;
+}
+
+div.conarea, div.opaarea, div.gamarea, div.mmarea {
+      text-align: left;
+      background: transparent;
+      border: 1px solid #bbbbbb;
+      width: 90%;
+      height: 12px;
+      margin-left: 0;
+      margin-right: auto;
+}
+
+div.minarea {
+      position: relative;
+      text-align: left;
+      background: transparent;
+      border: 1px solid #bbbbbb;
+      width: 42%;
+      height: 12px;
+      top: -20px;
+}
+
+div.maxarea  {
+      position: relative;
+      margin-right: 0px;
+      background: transparent;
+      border: 1px solid #bbbbbb;
+      width: 42%;
+      height: 12px;
+      top: -34px;
+      left: 50%;
+}
+div.conknob, div.opaknob, div.gamknob, div.minknob, div.maxknob {
+      color: white;
+      height: 12px;
+      width: 8px;
+      background: white;
+      cursor: move;
+      margin: 0px;
+           }
+
+.text {
+    margin: 1px;
+}
+
+p.maxtext {
+      position: relative;
+      left: 50%;
+      top: -22px;
+}
+

@@ -39,12 +39,12 @@ IIPMooViewer.implement({
     if( this.annotations ){
       this.canvas.addEvent( 'mouseenter', function(){
         if( _this.annotationsVisible ){
-	  _this.canvas.getElements('div.annotation').removeClass('hidden');
+	  _this.container.getElements('canvas.annotation').removeClass('hidden');
 	}
       });
       this.canvas.addEvent( 'mouseleave', function(){
 	if( _this.annotationsVisible ){
-	  _this.canvas.getElements('div.annotation').addClass('hidden');
+	  _this.container.getElements('canvas.annotation').addClass('hidden');
 	}
       });
     }
@@ -59,6 +59,20 @@ IIPMooViewer.implement({
     // with annotations within annotations
     if( !this.annotations ) return;
     this.annotations.sort( function(a,b){ return (b.w*b.h)-(a.w*a.h); } );
+    var annotation = new Element('canvas', {
+        'id': 'annotation',
+        'styles': {
+          'position': 'absolute',
+          'left': this.canvas.getStyle('left'),
+          'top': this.canvas.getStyle('top')
+	}
+      }).inject( this.container );
+    annotation.set('width', this.wid);
+    annotation.set('height', this.hei);
+    var ann_canvas = this.container.getElementById('annotation');
+    var context = ann_canvas.getContext('2d');
+
+    if( this.annotationsVisible==false ) annotation.addClass('hidden');
 
     for( var i=0; i<this.annotations.length; i++ ){
 
@@ -72,21 +86,17 @@ IIPMooViewer.implement({
 	  //	   this.wid*(this.annotations[i].x+this.annotations[i].w) > this.view.x+this.view.w && 
       ){
 
-	var annotation = new Element('div', {
-          'class': 'annotation',
-          'styles': {
-            left: Math.round(this.wid * this.annotations[i].x),
-            top: Math.round(this.hei * this.annotations[i].y ),
-	    width: Math.round( this.wid * this.annotations[i].w ),
-	    height: Math.round( this.hei * this.annotations[i].h )
-	  }
-        }).inject( this.canvas );
-
-	if( this.annotationsVisible==false ) annotation.addClass('hidden');
-
 	var text = this.annotations[i].text;
 	if( this.annotations[i].title ) text = '<h1>'+this.annotations[i].title+'</h1>' + text;
-        annotation.store( 'tip:text', text );
+        //this.annotations[i].store( 'tip:text', text );
+
+	context.beginPath();
+	context.rect(this.wid * this.annotations[i].x, this.hei * this.annotations[i].y, this.wid * this.annotations[i].w, this.hei * this.annotations[i].h);
+	// context.arc(0, 0, this.wid * this.annotations[i].w, 0, 2*Math.PI);
+	context.restore();
+	context.lineWidth=4;
+	context.strokeStyle="orange";
+	context.stroke();
       }
     }
 
@@ -128,7 +138,7 @@ IIPMooViewer.implement({
    */
   toggleAnnotations: function() {
     var els;
-    if( els = this.canvas.getElements('div.annotation') ){
+    if( els = this.container.getElements('canvas.annotation') ){
       if( this.annotationsVisible ){
 	els.addClass('hidden');
 	this.annotationsVisible = false;
@@ -145,11 +155,13 @@ IIPMooViewer.implement({
   /* Destroy our annotations
    */
   destroyAnnotations: function() {
-    if( this.annotationTip ) this.annotationTip.detach( this.canvas.getChildren('div.annotation') );
-    this.canvas.getChildren('div.annotation').each(function(el){
+    if( this.annotationTip ) this.annotationTip.detach( this.container.getChildren('canvas.annotation') );
+    
+    /*this.container.getChildren('canvas.annotation').each(function(el){
       el.eliminate('tip:text');
       el.destroy();
-    });
+    });*/
+    (this.container.getElementById('annotation')).destroy();
   }
 
 
