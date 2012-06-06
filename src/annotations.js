@@ -3,6 +3,7 @@
    IIPImage Javascript Viewer <http://iipimage.sourceforge.net>
 
    Copyright (c) 2007-2012 Ruven Pillay <ruven@users.sourceforge.net>
+   Copyright (c) 2012 Chiara Marmo <cmarmo@users.sourceforge.net>
 
    ---------------------------------------------------------------------------
 
@@ -50,6 +51,17 @@ IIPMooViewer.implement({
     }
   },
 
+  /* Draw each annotation
+   */
+  drawAnnotation: function(x, y, w, h) {
+	this.context.beginPath();
+	this.context.rect(x, y, w, h);
+	// context.arc(0, 0, this.wid * this.annotations[i].w, 0, 2*Math.PI);
+	this.context.restore();
+	this.context.lineWidth=4;
+	this.context.strokeStyle="orange";
+	this.context.stroke();
+  },
 
   /* Create annotations if they are contained within our current view
    */
@@ -59,7 +71,7 @@ IIPMooViewer.implement({
     // with annotations within annotations
     if( !this.annotations ) return;
     this.annotations.sort( function(a,b){ return (b.w*b.h)-(a.w*a.h); } );
-    var annotation = new Element('canvas', {
+    /*var annotation = new Element('canvas', {
         'id': 'annotation',
         'styles': {
           'position': 'absolute',
@@ -72,7 +84,7 @@ IIPMooViewer.implement({
     var ann_canvas = this.container.getElementById('annotation');
     var context = ann_canvas.getContext('2d');
 
-    if( this.annotationsVisible==false ) annotation.addClass('hidden');
+    if( this.annotationsVisible==false ) annotation.addClass('hidden');*/
 
     for( var i=0; i<this.annotations.length; i++ ){
 
@@ -89,14 +101,7 @@ IIPMooViewer.implement({
 	var text = this.annotations[i].text;
 	if( this.annotations[i].title ) text = '<h1>'+this.annotations[i].title+'</h1>' + text;
         //this.annotations[i].store( 'tip:text', text );
-
-	context.beginPath();
-	context.rect(this.wid * this.annotations[i].x, this.hei * this.annotations[i].y, this.wid * this.annotations[i].w, this.hei * this.annotations[i].h);
-	// context.arc(0, 0, this.wid * this.annotations[i].w, 0, 2*Math.PI);
-	context.restore();
-	context.lineWidth=4;
-	context.strokeStyle="orange";
-	context.stroke();
+        this.drawAnnotation(this.wid * this.annotations[i].x, this.hei * this.annotations[i].y, this.wid * this.annotations[i].w, this.hei * this.annotations[i].h);
       }
     }
 
@@ -133,7 +138,6 @@ IIPMooViewer.implement({
 
   },
 
-
   /* Toggle visibility of any annotations
    */
   toggleAnnotations: function() {
@@ -151,17 +155,24 @@ IIPMooViewer.implement({
     }
   },
 
+  // Determine if a point is inside the annotation's bounds
+  isInAnnotation = function(px, py) {
+  // All we have to do is make sure the Mouse X,Y fall in the area between
+  // the annotation's X and (X + Height) and its Y and (Y + Height)
+  return  (this.wid * this.annotations[i].x <= mx) && (this.wid * this.annotations[i].x + this.wid * this.annotations[i].w >= mx) &&
+          (this.hei * this.annotations[i].y <= my) && (this.hei * this.annotations[i].y + this.hei * this.annotations[i].h >= my);
+  },
 
   /* Destroy our annotations
    */
   destroyAnnotations: function() {
     if( this.annotationTip ) this.annotationTip.detach( this.container.getChildren('canvas.annotation') );
-    
+
     /*this.container.getChildren('canvas.annotation').each(function(el){
       el.eliminate('tip:text');
       el.destroy();
     });*/
-    (this.container.getElementById('annotation')).destroy();
+    //(this.container.getElementById('annotation')).destroy();
   }
 
 

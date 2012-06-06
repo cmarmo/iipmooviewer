@@ -261,12 +261,6 @@ var IIPMooViewer = new Class({
 
     // Load our image mosaic
     this.loadGrid();
-
-    // Create new annotations and attach the tooltip to them if it already exists
-    if( this.annotations ){
-      this.createAnnotations();
-      //if( this.annotationTip ) this.annotationTip.attach( this.canvas.getChildren('div.annotation') );
-    }
   },
 
 
@@ -274,7 +268,6 @@ var IIPMooViewer = new Class({
   /* Create a grid of tiles with the appropriate tile request and positioning
    */
   loadGrid: function(){
-
     var border = this.preload ? 1 : 0
 
     // Get the start points for our tiles
@@ -353,20 +346,9 @@ var IIPMooViewer = new Class({
     for (var oo=0; oo<this.images.length; oo++)
       if (this.images[oo].opacity) this.nTilesToLoad++;
     this.nTilesToLoad *= ntiles;
-
+console.log(this.nTilesToLoad);
     // If color composition is on reinitialize colorcanvas 
     if (this.enableColorComposition) this.colorcanvas.width = this.colorcanvas.width;
-
-    // Delete the tiles from our old image mosaic which are not in our new list of tiles
-    /*this.canvas.get('morph').cancel();
-    var _this = this;
-    this.canvas.getChildren('img').each( function(el){
-      var index = parseInt(el.retrieve('tile'));
-      if( !newTiles.contains(index) ){
-        el.destroy();
-	_this.tiles.erase(index);
-      }
-    });*/
 
     map.sort(function s(a,b){return a.n - b.n;});
 
@@ -394,20 +376,6 @@ var IIPMooViewer = new Class({
 	  tile.set('left', i*this.tileSize.w);
 	  tile.set('top', j*this.tileSize.h);
 	  tile.set('z-index', n);
-        
-	/*var tile = new Element('img', {
-          'class': 'layer'+n,
-          'styles': {
-	    left: i*this.tileSize.w,
-	    top: j*this.tileSize.h
-          }
-        });*/
-
-	  // Move this out of the main constructor to avoid DOM attribute bloat
-	  //if( this.effects ) tile.setStyle('opacity',0.1);
-
-	  // Inject into our canvas
-	  //tile.inject(this.canvas);
 
 	  // Get tile URL from our protocol object
           var minmin = '';
@@ -422,7 +390,6 @@ var IIPMooViewer = new Class({
 	       var tile = tiles[0];
 	       var id = tiles[1];
 	       var nl = tile.get('z-index');
-	       //if( this.effects ) tile.setStyle('opacity',1);
 	       if(!(tile.width&&tile.height)){
 	         tile.fireEvent('error');
 	         return;
@@ -448,11 +415,18 @@ var IIPMooViewer = new Class({
 	       if( this.showNavWindow ) this.refreshLoadBar();
 	       if( this.nTilesLoaded >= this.nTilesToLoad ) this.canvas.setStyle( 'cursor', 'move' );
 	       this.tiles.push(id); // Add to our list of loaded tiles
-	       if ( this.enableColorComposition && (this.nTilesLoaded == this.nTilesToLoad) ) {
-    		 // Display color image from color buffer
-		 colordata = this.colorcontext.getImageData(0,0,this.colorcanvas.width, this.colorcanvas.height);
-		 this.context.putImageData(colordata,0,0);        
-	       }
+               if (this.nTilesLoaded == this.nTilesToLoad) {
+	         if ( this.enableColorComposition ) {
+    		   // Display color image from color buffer
+		   colordata = this.colorcontext.getImageData(0,0,this.colorcanvas.width, this.colorcanvas.height);
+		   this.context.putImageData(colordata,0,0);        
+	         }
+                 // Create new annotations and attach the tooltip to them if it already exists
+                 if( this.annotations ){
+                   this.createAnnotations();
+                   //if( this.annotationTip ) this.annotationTip.attach( this.canvas.getChildren('div.annotation') );
+                 }
+               }
 	    }.bind(this,[tile,k]),
 	    'error': function(){
 	       // Try to reload if we have an error.
@@ -469,12 +443,6 @@ var IIPMooViewer = new Class({
         }
       }
     }
-
-    /*if( this.images.length > 1 ){
-      var selector = 'img.layer'+(n-1);
-      this.canvas.getChildren(selector).setStyle( 'opacity', this.opacity );
-    }*/
-
   },
 
 
@@ -1069,15 +1037,6 @@ var IIPMooViewer = new Class({
     }).inject( this.container );
 
     // Create our main window target div, add our events and inject inside the frame
-    /*this.canvasdiv = new Element('div', {
-      'class': 'canvas',
-      'morph': {
-	transition: Fx.Transitions.Quad.easeInOut,
-	onComplete: function(){
-	  _this.requestImages();
-	}
-      }
-    });*/
     this.canvas = new Element('canvas', {
       'id': 'images',
       'styles': { 'position': 'absolute' },
@@ -1325,7 +1284,7 @@ var IIPMooViewer = new Class({
     // Calculate some sizes and create the navigation window
     this.calculateSizes();
     this.createNavigationWindow();
-    if( this.annotations ) this.createAnnotations();
+    //if( this.annotations ) this.createAnnotations();
 
 
     if( !(Browser.Platform.ios||Browser.Platform.android) ){

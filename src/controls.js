@@ -290,6 +290,7 @@ IIPMooViewer.implement({
           'name': 'layercolor',
           'value': i,
         }).inject(form);
+	if ( _this.images[i].opacity ) cbox[i].set('checked','true');
         cbox[i].addEvent('click', function() {
            var j = cbox.indexOf(this);
            if (j!=-1) {
@@ -321,7 +322,9 @@ IIPMooViewer.implement({
 		}).inject(label);
 	cpick[i] = new MooRainbow('imageColor'+i, {
 		id: 'Rainbow'+i,
-		startColor: [255, 255, 255],
+		startColor: (_this.images[i].color!=null)?
+            [ _this.images[i].color[0]*255, _this.images[i].color[1]*255, _this.images[i].color[2]*255 ] :
+            [255, 255, 255],
 		imgPath: 'images/',
 	});
 	cpick[i].addEvent('complete', function(color) {
@@ -334,7 +337,6 @@ IIPMooViewer.implement({
                 }
 	});
      }
-     cbox[0].set('checked','true');
   },
 
   // Create Layer Menu
