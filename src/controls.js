@@ -156,8 +156,6 @@ IIPMooViewer.implement({
       // Send the minmax request
       this.images[i].minarray = new Array();
       this.images[i].maxarray = new Array();
-      var jmin = 0;
-      var jmax = 0;
       _this = this;
       minmaxreq[i] = new Request(
         {
@@ -171,9 +169,7 @@ IIPMooViewer.implement({
           if (j>-1) {
             _this.images[j].minarray = result.minarray;
             _this.images[j].maxarray = result.maxarray;
-            minslider[j].set(_this.images[j].minarray[0]);   
             document.getElementById('minimum'+j).set('html', _this.images[j].minarray[0]);
-            maxslider[j].set(_this.images[j].maxarray[0]);   
             document.getElementById('maximum'+j).set('html', _this.images[j].maxarray[0]);
           }
         },
@@ -194,11 +190,11 @@ IIPMooViewer.implement({
          range: [0,5000],
          onComplete: function(pos){
            newmin = pos;
-           var j = minslider.indexOf(this);
-           if (j!=-1) {
-             document.getElementById('minimum'+j).setStyle('font-weight', 'bold');
-             document.getElementById('minimum'+j).set('html', newmin);
-             _this.images[j].minarray[0]=newmin;
+           var jmin = minslider.indexOf(this);
+           if (jmin>-1) {
+             document.getElementById('minimum'+jmin).setStyle('font-weight', 'bold');
+             document.getElementById('minimum'+jmin).set('html', newmin);
+             _this.images[jmin].minarray[0]=newmin;
              _this.requestImages();
            }
          }
@@ -217,17 +213,17 @@ IIPMooViewer.implement({
          range: [0,8000],
          onComplete: function(pos){
            newmax = pos;
-           var j = maxslider.indexOf(this);
-           if (j!=-1) {
-             document.getElementById('maximum'+j).setStyle('font-weight', 'bold');
-             document.getElementById('maximum'+j).set('html', newmax);
-             _this.images[j].maxarray[0]=newmax;
+           var jmax = maxslider.indexOf(this);
+           if (jmax>-1) {
+             document.getElementById('maximum'+jmax).setStyle('font-weight', 'bold');
+             document.getElementById('maximum'+jmax).set('html', newmax);
+             _this.images[jmax].maxarray[0]=newmax;
              _this.requestImages();
            }
          }
       });
+      maxslider[i].set(this.images[i].maxarray[0]);   
     }
-
 
   },
 

@@ -346,7 +346,6 @@ var IIPMooViewer = new Class({
     for (var oo=0; oo<this.images.length; oo++)
       if (this.images[oo].opacity) this.nTilesToLoad++;
     this.nTilesToLoad *= ntiles;
-console.log(this.nTilesToLoad);
     // If color composition is on reinitialize colorcanvas 
     if (this.enableColorComposition) this.colorcanvas.width = this.colorcanvas.width;
 
@@ -368,66 +367,67 @@ console.log(this.nTilesToLoad);
       }*/
 
       // Iterate over the number of layers we have
-      var n;
-      for(n=0;n<this.images.length;n++){
-	if (this.images[n].opacity) {
+      for(var nn=0; nn<this.images.length; nn++){
+	if (this.images[nn].opacity) {
 
           var tile = new Image();
 	  tile.set('left', i*this.tileSize.w);
 	  tile.set('top', j*this.tileSize.h);
-	  tile.set('z-index', n);
 
 	  // Get tile URL from our protocol object
           var minmin = '';
           var maxmax = '';
-          if (this.images[n].minarray) minmin = this.images[n].minarray[0];
-          if (this.images[n].maxarray) maxmax = this.images[n].maxarray[0];
-	  var src = this.protocol.getTileURL( this.server, this.images[n].src, this.view.res, this.images[n].sds, minmin, maxmax, this.images[n].cnt, this.images[n].gamma, k, i, j );
-
+          if (this.images[nn].minarray) minmin = this.images[nn].minarray[0];
+          if (this.images[nn].maxarray) maxmax = this.images[nn].maxarray[0];
+	  var src = this.protocol.getTileURL( this.server, this.images[nn].src, this.view.res, this.images[nn].sds, minmin, maxmax, this.images[nn].cnt, this.images[nn].gamma, k, i, j );
 	  // Add our tile event functions after injection otherwise we get no event
 	  tile.addEvents({
 	    'load': function(tiles){
 	       var tile = tiles[0];
 	       var id = tiles[1];
-	       var nl = tile.get('z-index');
+	       var nl = tiles[2];
+	       var nid = id*(nl+1); 
 	       if(!(tile.width&&tile.height)){
 	         tile.fireEvent('error');
 	         return;
 	       }
 
-               /* applying color map  */
-	       if (this.enableColorComposition) {
-                 this.tmpcontext.drawImage(tile,0,0);
-	         var tmpimdata = this.tmpcontext.getImageData(0,0,tile.width, tile.height);
-	         var tmpdata = tmpimdata.data;
-	         var imdata = this.colorcontext.getImageData(tile.get('left'),tile.get('top'),tile.width, tile.height);
-	         var data = imdata.data;
-	         for (j=0, nd=data.length; j<nd ; j+=4) {
- 	           tmpdata[j] = data[j]+tmpdata[j]*(_this.images[nl].color)[0];
-	           tmpdata[j+1] = data[j+1]+tmpdata[j+1]*(_this.images[nl].color)[1];
-	           tmpdata[j+2] = data[j+2]+tmpdata[j+2]*(_this.images[nl].color)[2];
-	         }
-	         this.colorcontext.putImageData(tmpimdata,tile.get('left'),tile.get('top'));
-                 this.tmpcanvas.width = this.tmpcanvas.width;
-	       } else this.context.drawImage(tile,tile.get('left'),tile.get('top'));
+	       //if (this.nTilesLoaded < this.nTilesToLoad) {
+                 /* applying color map  */
+	         if (this.enableColorComposition) {
+                   this.tmpcontext.drawImage(tile,0,0);
+	           var tmpimdata = this.tmpcontext.getImageData(0,0,tile.width, tile.height);
+	           var tmpdata = tmpimdata.data;
+	           var imdata = this.colorcontext.getImageData(tile.get('left'),tile.get('top'),tile.width, tile.height);
+	           var data = imdata.data;
+	           for (j=0, nd=data.length; j<nd ; j+=4) {
+ 	             tmpdata[j] = data[j]+tmpdata[j]*(_this.images[nl].color)[0];
+	             tmpdata[j+1] = data[j+1]+tmpdata[j+1]*(_this.images[nl].color)[1];
+	             tmpdata[j+2] = data[j+2]+tmpdata[j+2]*(_this.images[nl].color)[2];
+	           }
+	           this.colorcontext.putImageData(tmpimdata,tile.get('left'),tile.get('top'));
+                   this.tmpcanvas.width = this.tmpcanvas.width;
+	         } else this.context.drawImage(tile,tile.get('left'),tile.get('top'));
 
-	       this.nTilesLoaded++;
-	       if( this.showNavWindow ) this.refreshLoadBar();
-	       if( this.nTilesLoaded >= this.nTilesToLoad ) this.canvas.setStyle( 'cursor', 'move' );
-	       this.tiles.push(id); // Add to our list of loaded tiles
+	         this.nTilesLoaded++;
+	         if( this.showNavWindow ) this.refreshLoadBar();
+	         this.tiles.push(nid); // Add to our list of loaded tiles
+               //}
                if (this.nTilesLoaded == this.nTilesToLoad) {
+		 this.canvas.setStyle( 'cursor', 'move' );
 	         if ( this.enableColorComposition ) {
     		   // Display color image from color buffer
 		   colordata = this.colorcontext.getImageData(0,0,this.colorcanvas.width, this.colorcanvas.height);
-		   this.context.putImageData(colordata,0,0);        
+		   this.context.putImageData(colordata,0,0);
 	         }
                  // Create new annotations and attach the tooltip to them if it already exists
                  if( this.annotations ){
                    this.createAnnotations();
                    //if( this.annotationTip ) this.annotationTip.attach( this.canvas.getChildren('div.annotation') );
                  }
+		 return;
                }
-	    }.bind(this,[tile,k]),
+	    }.bind(this,[tile,k,nn]),
 	    'error': function(){
 	       // Try to reload if we have an error.
 	       // Add a suffix to prevent caching, but remove error event to avoid endless loops
@@ -440,6 +440,7 @@ console.log(this.nTilesToLoad);
 	  // We must set the source at the end so that the 'load' function is properly fired
 	  tile.set( 'src', src );
 	  tile.store('tile',k);
+	  tile.set('layer',nn);
         }
       }
     }
