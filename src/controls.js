@@ -187,7 +187,7 @@ IIPMooViewer.implement({
       }).inject(minarea);
       var _this = this;
       minslider[i] = new Slider( minarea, minknob, {
-         range: [0,5000],
+         range: [-100,500],
          onComplete: function(pos){
            newmin = pos;
            var jmin = minslider.indexOf(this);
@@ -210,7 +210,7 @@ IIPMooViewer.implement({
       }).inject(maxarea);
       var _this = this;
       maxslider[i] = new Slider( maxarea, maxknob, {
-         range: [0,8000],
+         range: [0,600],
          onComplete: function(pos){
            newmax = pos;
            var jmax = maxslider.indexOf(this);

@@ -269,32 +269,27 @@ var IIPMooViewer = new Class({
    */
   loadGrid: function(){
     var border = this.preload ? 1 : 0
-
     // Get the start points for our tiles
     var startx = Math.floor( this.view.x / this.tileSize.w ) - border;
     var starty = Math.floor( this.view.y / this.tileSize.h ) - border;
     if( startx<0 ) startx = 0;
     if( starty<0 ) starty = 0;
 
-
     // If our size is smaller than the display window, only get these tiles!
     var len = this.view.w;
     if( this.wid < this.view.w ) len = this.wid;
     var endx =  Math.ceil( ((len + this.view.x)/this.tileSize.w) - 1 ) + border;
 
-
     len = this.view.h;
     if( this.hei < this.view.h ) len = this.hei;
     var endy = Math.ceil( ( (len + this.view.y)/this.tileSize.h) - 1 ) + border;
 
-
     // Number of tiles is dependent on view width and height
-    var xtiles = Math.ceil( this.wid / this.tileSize.h );
+    var xtiles = Math.ceil( this.wid / this.tileSize.w );
     var ytiles = Math.ceil( this.hei / this.tileSize.h );
 
     if( endx >= xtiles ) endx = xtiles-1;
     if( endy >= ytiles ) endy = ytiles-1;
-
 
     /* Calculate the offset from the tile top left that we want to display.
        Also Center the image if our viewable image is smaller than the window
@@ -304,10 +299,8 @@ var IIPMooViewer = new Class({
 
     var yoffset = Math.floor(this.view.y % this.tileSize.h);
     if( this.hei < this.view.h ) yoffset -= (this.view.h - this.hei)/2;
-
     var tile;
     var i, j, k, n;
-    var left, top;
     k = 0;
     n = 0;
 
@@ -337,7 +330,6 @@ var IIPMooViewer = new Class({
 
 	k = i + (j*xtiles);
 	newTiles.push(k);
-
       }
     }
 
@@ -371,8 +363,12 @@ var IIPMooViewer = new Class({
 	if (this.images[nn].opacity) {
 
           var tile = new Image();
-	  tile.set('left', i*this.tileSize.w);
-	  tile.set('top', j*this.tileSize.h);
+	  var loffset = (xoffset>0)? xoffset : 0;
+	  var toffset = (yoffset>0)? yoffset : 0;
+	  var left = (i-startx)*this.tileSize.w-loffset;
+	  var top = (j-starty)*this.tileSize.h-toffset;
+	  tile.set('left', left);
+	  tile.set('top', top);
 
 	  // Get tile URL from our protocol object
           var minmin = '';
@@ -392,27 +388,25 @@ var IIPMooViewer = new Class({
 	         return;
 	       }
 
-	       //if (this.nTilesLoaded < this.nTilesToLoad) {
-                 /* applying color map  */
-	         if (this.enableColorComposition) {
-                   this.tmpcontext.drawImage(tile,0,0);
-	           var tmpimdata = this.tmpcontext.getImageData(0,0,tile.width, tile.height);
-	           var tmpdata = tmpimdata.data;
-	           var imdata = this.colorcontext.getImageData(tile.get('left'),tile.get('top'),tile.width, tile.height);
-	           var data = imdata.data;
-	           for (j=0, nd=data.length; j<nd ; j+=4) {
- 	             tmpdata[j] = data[j]+tmpdata[j]*(_this.images[nl].color)[0];
-	             tmpdata[j+1] = data[j+1]+tmpdata[j+1]*(_this.images[nl].color)[1];
-	             tmpdata[j+2] = data[j+2]+tmpdata[j+2]*(_this.images[nl].color)[2];
-	           }
-	           this.colorcontext.putImageData(tmpimdata,tile.get('left'),tile.get('top'));
-                   this.tmpcanvas.width = this.tmpcanvas.width;
-	         } else this.context.drawImage(tile,tile.get('left'),tile.get('top'));
+               /* applying color map  */
+	       if (this.enableColorComposition) {
+                 this.tmpcontext.drawImage(tile,0,0);
+	         var tmpimdata = this.tmpcontext.getImageData(0,0,tile.width, tile.height);
+	         var tmpdata = tmpimdata.data;
+	         var imdata = this.colorcontext.getImageData(tile.get('left'),tile.get('top'),tile.width, tile.height);
+	         var data = imdata.data;
+	         for (j=0, nd=data.length; j<nd ; j+=4) {
+ 	           tmpdata[j] = data[j]+tmpdata[j]*(_this.images[nl].color)[0];
+	           tmpdata[j+1] = data[j+1]+tmpdata[j+1]*(_this.images[nl].color)[1];
+	           tmpdata[j+2] = data[j+2]+tmpdata[j+2]*(_this.images[nl].color)[2];
+	         }
+	         this.colorcontext.putImageData(tmpimdata,tile.get('left'),tile.get('top'));
+                 this.tmpcanvas.width = this.tmpcanvas.width;
+	       } else this.context.drawImage(tile,tile.get('left'),tile.get('top'));
 
-	         this.nTilesLoaded++;
-	         if( this.showNavWindow ) this.refreshLoadBar();
-	         this.tiles.push(nid); // Add to our list of loaded tiles
-               //}
+	       this.nTilesLoaded++;
+	       if( this.showNavWindow ) this.refreshLoadBar();
+	       this.tiles.push(nid); // Add to our list of loaded tiles
                if (this.nTilesLoaded == this.nTilesToLoad) {
 		 this.canvas.setStyle( 'cursor', 'move' );
 	         if ( this.enableColorComposition ) {
@@ -671,14 +665,18 @@ var IIPMooViewer = new Class({
     var morphable = Math.abs(xmove-this.view.x)<this.view.w/2 && Math.abs(ymove-this.view.y)<this.view.h/2 && this.view.rotation==0;
     if( morphable ){
       this.canvas.morph({
-	left: (this.wid>this.view.w)? -xmove : Math.round((this.view.w-this.wid)/2),
-	top: (this.hei>this.view.h)? -ymove : Math.round((this.view.h-this.hei)/2)
+	//left: (this.wid>this.view.w)? -xmove : Math.round((this.view.w-this.wid)/2),
+	//top: (this.hei>this.view.h)? -ymove : Math.round((this.view.h-this.hei)/2)
+	left: (this.wid>this.view.w)? 0 : Math.round((this.view.w-this.wid)/2),
+	top: (this.hei>this.view.h)? 0 : Math.round((this.view.h-this.hei)/2)
       });
     }
     else{
       this.canvas.setStyles({
-	left: (this.wid>this.view.w)? -xmove : Math.round((this.view.w-this.wid)/2),
-	top: (this.hei>this.view.h)? -ymove : Math.round((this.view.h-this.hei)/2)
+	//left: (this.wid>this.view.w)? -xmove : Math.round((this.view.w-this.wid)/2),
+	//top: (this.hei>this.view.h)? -ymove : Math.round((this.view.h-this.hei)/2)
+	left: (this.wid>this.view.w)? 0 : Math.round((this.view.w-this.wid)/2),
+	top: (this.hei>this.view.h)? 0 : Math.round((this.view.h-this.hei)/2)
       });
     }
 
@@ -706,18 +704,15 @@ var IIPMooViewer = new Class({
 
     var pos = {};
     // Use style values directly as getPosition will take into account rotation
-    pos.x = this.canvas.getStyle('left').toInt();
-    pos.y = this.canvas.getStyle('top').toInt();
     //    pos.y = pos.y + Math.sin( this.view.rotation*Math.PI*2 / 360 ) * this.view.w / 2;
     //    pos.x = pos.x + (this.view.w/2) - Math.cos( this.view.rotation*Math.PI*2 / 360 ) * this.view.w / 2;
-    var xmove =  -pos.x;
-    var ymove =  -pos.y;
+    var xmove =  this.view.x - e.offsetLeft;
+    var ymove =  this.view.y - e.offsetTop;
     this.moveTo( xmove, ymove );
 
     if( IIPMooViewer.sync ){
       IIPMooViewer.windows(this).each( function(el){ el.moveTo(xmove,ymove); });
     }
-
   },
 
 
@@ -747,9 +742,13 @@ var IIPMooViewer = new Class({
 
     this.checkBounds(x,y);
     this.canvas.setStyles({
-      left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
-      top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
+      //left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
+      //top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
+      left: (this.wid>this.view.w)? 0 : Math.round((this.view.w-this.wid)/2),
+      top: (this.hei>this.view.h)? 0 : Math.round((this.view.h-this.hei)/2)
     });
+    this.canvas.set('width',this.view.w);
+    this.canvas.set('height',this.view.h);
 
     this.requestImages();
     this.positionZone();
@@ -765,8 +764,10 @@ var IIPMooViewer = new Class({
 
     // Check whether image size is less than viewport
     this.canvas.morph({
-      left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
-      top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
+      //left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
+      //top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
+      left: (this.wid>this.view.w)? 0 : Math.round((this.view.w-this.wid)/2),
+      top: (this.hei>this.view.h)? 0 : Math.round((this.view.h-this.hei)/2)
     });
 
     this.positionZone();
@@ -801,11 +802,14 @@ var IIPMooViewer = new Class({
       var cc = event.target.get('class');
 
       if( cc != "zone" & cc != 'navimage' ){
+        var oldx = this.view.x;
+	var oldy = this.view.y;
+
 	pos = this.canvas.getPosition();
 
 	// Center our zooming on the mouse position when over the main target window
-	this.view.x = event.page.x - pos.x - Math.floor(this.view.w/2);
-	this.view.y = event.page.y - pos.y - Math.floor(this.view.h/2);
+	this.view.x = (this.wid < this.view.w)? Math.round(event.page.x - pos.x - this.view.w/2) : Math.round(-event.page.x + oldx + this.view.w/2);
+	this.view.y = (this.hei < this.view.h)? Math.round(event.page.y - pos.y - this.view.h/2) : Math.round(-event.page.y + oldy + this.view.h/2);
       }
       else{
 	// For zooms with the mouse over the navigation window
@@ -883,6 +887,8 @@ var IIPMooViewer = new Class({
     // Get the image size for this resolution
     this.wid = this.resolutions[this.view.res].w;
     this.hei = this.resolutions[this.view.res].h;
+    var wid = (this.wid>this.view.w)? this.view.w : this.wid;
+    var hei = (this.hei>this.view.h)? this.view.h : this.hei;
 
     if( this.view.x + this.view.w > this.wid ) this.view.x = this.wid - this.view.w;
     if( this.view.x < 0 ) this.view.x = 0;
@@ -891,15 +897,17 @@ var IIPMooViewer = new Class({
     if( this.view.y < 0 ) this.view.y = 0;
 
     this.canvas.setStyles({
-      left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
-      top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
+      //left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
+      //top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
+      left: (this.wid>this.view.w)? 0 : Math.round((this.view.w-this.wid)/2),
+      top: (this.hei>this.view.h)? 0 : Math.round((this.view.h-this.hei)/2)
     });
 
-    this.canvas.set('width', this.wid);
-    this.canvas.set('height', this.hei);
+    this.canvas.set('width', wid);
+    this.canvas.set('height', hei);
     if (this.enableColorComposition) {
-      this.colorcanvas.set('width', this.wid);
-      this.colorcanvas.set('height', this.hei);
+      this.colorcanvas.set('width', wid);
+      this.colorcanvas.set('height', hei);
       this.tmpcanvas.set('width', this.tileSize.w);
       this.tmpcanvas.set('height', this.tileSize.h);
     }
@@ -1059,7 +1067,6 @@ var IIPMooViewer = new Class({
 
 
     // Inject our canvas into the container, but events need to be added after injection
-    //this.canvasdiv.inject( this.container );
     this.canvas.inject( this.container );
     this.canvas.addEvents({
       'mousewheel:throttle(75)': this.zoom.bind(this),
@@ -1189,8 +1196,10 @@ var IIPMooViewer = new Class({
 	    if( _this.view.x < 0 ) _this.view.x = 0;
 	    if( _this.view.y < 0 ) _this.view.y = 0;
 	    _this.canvas.setStyles({
-	      left: (_this.wid>_this.view.w) ? -_this.view.x : Math.round((_this.view.w-_this.wid)/2),
-	      top: (_this.hei>_this.view.h) ? -_this.view.y : Math.round((_this.view.h-_this.hei)/2)
+	      //left: (_this.wid>_this.view.w) ? -_this.view.x : Math.round((_this.view.w-_this.wid)/2),
+	      //top: (_this.hei>_this.view.h) ? -_this.view.y : Math.round((_this.view.h-_this.hei)/2)
+	      left: (_this.wid>_this.view.w) ? 0 : Math.round((_this.view.w-_this.wid)/2),
+	      top: (_this.hei>_this.view.h) ? 0 : Math.round((_this.view.h-_this.hei)/2)
 	    });
 	  }
 	  if( e.touches.length == 2 ){
@@ -1324,11 +1333,14 @@ var IIPMooViewer = new Class({
  
 
     // Set the size of the canvas to that of the full image at the current resolution
-    this.canvas.set('width', this.wid);
-    this.canvas.set('height', this.hei);
+    // or the window if image is larger than the window
+    var wid = (this.wid>this.view.w)? this.view.w : this.wid;
+    var hei = (this.hei>this.view.h)? this.view.h : this.hei;
+    this.canvas.set('width', wid);
+    this.canvas.set('height', hei);
     if (this.enableColorComposition) {
-      this.colorcanvas.set('width', this.wid);
-      this.colorcanvas.set('height', this.hei);
+      this.colorcanvas.set('width', wid);
+      this.colorcanvas.set('height', hei);
       this.tmpcanvas.set('width', this.tileSize.w);
       this.tmpcanvas.set('height', this.tileSize.h);
     }
@@ -1636,8 +1648,10 @@ var IIPMooViewer = new Class({
 
     // Constrain our canvas if it is smaller than the view window
     this.canvas.setStyles({
-      left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
-      top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
+      //left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
+      //top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
+      left: (this.wid>this.view.w)? 0 : Math.round((this.view.w-this.wid)/2),
+      top: (this.hei>this.view.h)? 0 : Math.round((this.view.h-this.hei)/2)
     });
 
     // For panoramic images, use a large navigation window
@@ -1709,11 +1723,13 @@ var IIPMooViewer = new Class({
     }
     else this.recenter();
 
-    this.canvas.set('width', this.wid);
-    this.canvas.set('height', this.hei);
+    var wid = (this.wid>this.view.w)? this.view.w : this.wid;
+    var hei = (this.hei>this.view.h)? this.view.h : this.hei;
+    this.canvas.set('width', wid);
+    this.canvas.set('height', hei);
     if (this.enableColorComposition) {
-      this.colorcanvas.set('width', this.wid);
-      this.colorcanvas.set('height', this.hei);
+      this.colorcanvas.set('width', wid);
+      this.colorcanvas.set('height', hei);
       this.tmpcanvas.set('width', this.tileSize.w);
       this.tmpcanvas.set('height', this.tileSize.h);
     }
@@ -1744,8 +1760,10 @@ var IIPMooViewer = new Class({
 
     // Center our canvasdiv, taking into account images smaller than the viewport
     this.canvas.setStyles({
-      left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
-      top : (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
+      //left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
+      //top : (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
+      left: (this.wid>this.view.w)? 0 : Math.round((this.view.w-this.wid)/2),
+      top : (this.hei>this.view.h)? 0 : Math.round((this.view.h-this.hei)/2)
     });
 
     this.constrain();
@@ -1757,9 +1775,8 @@ var IIPMooViewer = new Class({
    */
   constrain: function(){
 
-    var ax = this.wid<this.view.w ? Array(Math.round((this.view.w-this.wid)/2), Math.round((this.view.w-this.wid)/2)) : Array(this.view.w-this.wid,0);
-    var ay = this.hei<this.view.h ? Array(Math.round((this.view.h-this.hei)/2), Math.round((this.view.h-this.hei)/2)) : Array(this.view.h-this.hei,0);
-
+    var ax = this.wid<this.view.w ? Array(Math.round((this.view.w-this.wid)/2), Math.round((this.view.w-this.wid)/2)) : Array(this.view.w-this.wid,this.wid-this.view.w);
+    var ay = this.hei<this.view.h ? Array(Math.round((this.view.h-this.hei)/2), Math.round((this.view.h-this.hei)/2)) : Array(this.view.h-this.hei,this.hei-this.view.h);
     this.touch.options.limit = { x: ax, y: ay };
   },
 
