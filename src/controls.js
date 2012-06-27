@@ -31,6 +31,11 @@ IIPMooViewer.implement({
       'class': 'controls',
       //'title': 'draggable controls',
     }).inject(this.source);
+    var toolbar = new Element( 'div', {
+      'class': 'toolbar',
+    });
+    toolbar.store( 'tip:text', IIPMooViewer.lang.dragcont );
+    toolbar.inject(this.controlsWindow);
     /*var globaldiv = new Element('div', {
       'id': 'globcontrols',
       'class': 'text',
@@ -43,9 +48,27 @@ IIPMooViewer.implement({
         'html': '<p id="impar'+i+'">...'+(this.images[i].src).slice(-50)+'</p>',
       }).inject(this.controlsWindow);
     }
-    //this.controlsWindow.makeDraggable({container: this.container});
+    this.controlsWindow.makeDraggable({
+	container: this.container,
+        handle:toolbar,
+         // Take a note of the starting coords of our drag zone
+         onStart: function() {
+	   var pos = this.controlsWindow.getPosition();
+	   this.cwpos = {x: pos.x, y: pos.y-10};
+	 }.bind(this),
+         //onComplete: this.scrollNavigation.bind(this)
+    });
   },
 
+  /* Toggle the visibility of our control window
+   */
+  toggleControlWindow: function(){
+    // For removing the control window if it exists - must use the get('reveal')
+    // otherwise we do not have the Mootools extended object
+    if( this.container.getElement('div.controls') ){
+      this.container.getElement('div.controls').get('reveal').toggle();
+    }
+  },
 
 
 
@@ -139,43 +162,29 @@ IIPMooViewer.implement({
 
     var minslider = Array(this.images.length);
     var maxslider = Array(this.images.length);
+    var minInp = Array(this.images.length);
+    var maxInp = Array(this.images.length);
+
     for (i=0; i<this.images.length; i++){
 
+      var _this = this;
       var imdiv = this.controlsWindow.getElementById('imname'+i);
       var minPar = new Element('p', {
         'id': 'minslider'+i,
-        'class': 'text',
-        'html': 'minimum: <span id="minimum'+i+'"></span>'
+        'class': 'mintext',
+        'html': 'min: '
       }).inject(imdiv);
+      minInp[i] = new Element('input',{
+	'id': 'minimum'+i,
+      }).inject(minPar);
       var maxPar = new Element('p', {
         'id': 'maxslider'+i,
         'class': 'maxtext',
-        'html': 'maximum: <span id="maximum'+i+'"></span>'
+        'html': 'max: '
       }).inject(imdiv);
-
-      // Send the minmax request
-      this.images[i].minarray = new Array();
-      this.images[i].maxarray = new Array();
-      _this = this;
-      minmaxreq[i] = new Request(
-        {
-	method: 'get',
-	url: _this.server,
-  	onComplete: function(transport){
-	  var response = transport || alert( "Error: No response from server " + _this.server );
-	  // Parse the result
-          var result = _this.protocol.parseMinMax( response );
-          var j = minmaxreq.indexOf(this);
-          if (j>-1) {
-            _this.images[j].minarray = result.minarray;
-            _this.images[j].maxarray = result.maxarray;
-            document.getElementById('minimum'+j).set('html', _this.images[j].minarray[0]);
-            document.getElementById('maximum'+j).set('html', _this.images[j].maxarray[0]);
-          }
-        },
-	onFailure: function(){ alert('Error: Unable to get image minimum and maximum from server!'); }
-	} );
-      minmaxreq[i].send( this.protocol.getMinMaxURL(this.images[i].src) );
+      maxInp[i] = new Element('input',{
+	'id': 'maximum'+i,
+      }).inject(maxPar);
 
       var minarea = new Element('div', {
           'id': 'minarea'+i,
@@ -185,15 +194,13 @@ IIPMooViewer.implement({
          'id': 'minknob'+i,
          'class': 'minknob'
       }).inject(minarea);
-      var _this = this;
       minslider[i] = new Slider( minarea, minknob, {
-         range: [-100,500],
+         range: [-10,100],
          onComplete: function(pos){
-           newmin = pos;
+           var newmin = pos;
            var jmin = minslider.indexOf(this);
            if (jmin>-1) {
-             document.getElementById('minimum'+jmin).setStyle('font-weight', 'bold');
-             document.getElementById('minimum'+jmin).set('html', newmin);
+             document.getElementById('minimum'+jmin).set('value', newmin);
              _this.images[jmin].minarray[0]=newmin;
              _this.requestImages();
            }
@@ -208,23 +215,62 @@ IIPMooViewer.implement({
          'id': 'maxknob'+i,
          'class': 'maxknob'
       }).inject(maxarea);
-      var _this = this;
       maxslider[i] = new Slider( maxarea, maxknob, {
-         range: [0,600],
+         range: [-10,100],
          onComplete: function(pos){
-           newmax = pos;
+           var newmax = pos;
            var jmax = maxslider.indexOf(this);
            if (jmax>-1) {
-             document.getElementById('maximum'+jmax).setStyle('font-weight', 'bold');
-             document.getElementById('maximum'+jmax).set('html', newmax);
+             document.getElementById('maximum'+jmax).set('value', newmax);
              _this.images[jmax].maxarray[0]=newmax;
              _this.requestImages();
            }
          }
       });
-      maxslider[i].set(this.images[i].maxarray[0]);   
-    }
 
+      // Send the minmax request
+      this.images[i].minarray = new Array();
+      this.images[i].maxarray = new Array();
+      minmaxreq[i] = new Request(
+        {
+	method: 'get',
+	url: _this.server,
+  	onComplete: function(transport){
+	  var response = transport || alert( "Error: No response from server " + _this.server );
+	  // Parse the result
+          var result = _this.protocol.parseMinMax( response );
+          var j = minmaxreq.indexOf(this);
+          if (j>-1) {
+            _this.images[j].minarray = result.minarray;
+            _this.images[j].maxarray = result.maxarray;
+            document.getElementById('minimum'+j).set('value', _this.images[j].minarray[0]);
+            document.getElementById('maximum'+j).set('value', _this.images[j].maxarray[0]);
+            minslider[j].set(_this.images[j].minarray[0]);
+            maxslider[j].set(_this.images[j].maxarray[0]);
+          }
+        },
+	onFailure: function(){ alert('Error: Unable to get image minimum and maximum from server!'); }
+	} );
+      minmaxreq[i].send( this.protocol.getMinMaxURL(this.images[i].src) );
+
+
+      minInp[i].addEvent('change', function(){
+           var jmin = minInp.indexOf(this);
+           if (jmin>-1) {
+             minslider[jmin].set(this.value);
+             _this.images[jmin].minarray[0]=this.value;
+             _this.requestImages();
+	   }
+      });
+      maxInp[i].addEvent('change', function(){
+           var jmax = maxInp.indexOf(this);
+           if (jmax>-1) {
+             maxslider[jmax].set(this.value);
+             _this.images[jmax].maxarray[0]=this.value;
+             _this.requestImages();
+	   }
+      });
+    }
   },
 
 

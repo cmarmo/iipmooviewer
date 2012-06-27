@@ -253,9 +253,9 @@ var IIPMooViewer = new Class({
 
     // Set our rotation origin - calculate differently if canvas is smaller than view port
     if( !Browser.buggy ){
-      var origin_x = ( this.wid>this.view.w ? Math.round(this.view.x+this.view.w/2) : Math.round(this.wid/2) ) + "px";
-      var origin_y = ( this.hei>this.view.h ? Math.round(this.view.y+this.view.h/2) : Math.round(this.hei/2) ) + "px";
-      var origin = origin_x + " " + origin_y;
+      var origin_x = ( this.wid>this.view.w) ? Math.round(this.view.w/2) : Math.round(this.wid/2);
+      var origin_y = ( this.hei>this.view.h) ? Math.round(this.view.h/2) : Math.round(this.hei/2);
+      var origin = origin_x + "px " + origin_y + "px";
       this.canvas.setStyle( this.CSSprefix+'transform-origin', origin );
     }
 
@@ -510,6 +510,7 @@ var IIPMooViewer = new Class({
       break;
     case 72: // h
       this.toggleNavigationWindow();
+      this.toggleControlWindow();
       break;
     case 82: // r
       if(!e.control){
@@ -613,7 +614,6 @@ var IIPMooViewer = new Class({
     }
   },
 
-
   /* Show a message, then delete after a timeout
    */
   showPopUp: function( text ) {
@@ -665,16 +665,12 @@ var IIPMooViewer = new Class({
     var morphable = Math.abs(xmove-this.view.x)<this.view.w/2 && Math.abs(ymove-this.view.y)<this.view.h/2 && this.view.rotation==0;
     if( morphable ){
       this.canvas.morph({
-	//left: (this.wid>this.view.w)? -xmove : Math.round((this.view.w-this.wid)/2),
-	//top: (this.hei>this.view.h)? -ymove : Math.round((this.view.h-this.hei)/2)
 	left: (this.wid>this.view.w)? 0 : Math.round((this.view.w-this.wid)/2),
 	top: (this.hei>this.view.h)? 0 : Math.round((this.view.h-this.hei)/2)
       });
     }
     else{
       this.canvas.setStyles({
-	//left: (this.wid>this.view.w)? -xmove : Math.round((this.view.w-this.wid)/2),
-	//top: (this.hei>this.view.h)? -ymove : Math.round((this.view.h-this.hei)/2)
 	left: (this.wid>this.view.w)? 0 : Math.round((this.view.w-this.wid)/2),
 	top: (this.hei>this.view.h)? 0 : Math.round((this.view.h-this.hei)/2)
       });
@@ -703,9 +699,6 @@ var IIPMooViewer = new Class({
   scroll: function(e) {
 
     var pos = {};
-    // Use style values directly as getPosition will take into account rotation
-    //    pos.y = pos.y + Math.sin( this.view.rotation*Math.PI*2 / 360 ) * this.view.w / 2;
-    //    pos.x = pos.x + (this.view.w/2) - Math.cos( this.view.rotation*Math.PI*2 / 360 ) * this.view.w / 2;
     var xmove =  this.view.x - e.offsetLeft;
     var ymove =  this.view.y - e.offsetTop;
     this.moveTo( xmove, ymove );
@@ -742,8 +735,6 @@ var IIPMooViewer = new Class({
 
     this.checkBounds(x,y);
     this.canvas.setStyles({
-      //left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
-      //top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
       left: (this.wid>this.view.w)? 0 : Math.round((this.view.w-this.wid)/2),
       top: (this.hei>this.view.h)? 0 : Math.round((this.view.h-this.hei)/2)
     });
@@ -764,8 +755,6 @@ var IIPMooViewer = new Class({
 
     // Check whether image size is less than viewport
     this.canvas.morph({
-      //left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
-      //top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
       left: (this.wid>this.view.w)? 0 : Math.round((this.view.w-this.wid)/2),
       top: (this.hei>this.view.h)? 0 : Math.round((this.view.h-this.hei)/2)
     });
@@ -802,14 +791,13 @@ var IIPMooViewer = new Class({
       var cc = event.target.get('class');
 
       if( cc != "zone" & cc != 'navimage' ){
-        var oldx = this.view.x;
-	var oldy = this.view.y;
 
-	pos = this.canvas.getPosition();
+	var pos = {x : (this.wid < this.view.w)? this.canvas.getPosition().x : -this.view.x,
+                   y : (this.hei < this.view.h)? this.canvas.getPosition().y : -this.view.y};
 
 	// Center our zooming on the mouse position when over the main target window
-	this.view.x = (this.wid < this.view.w)? Math.round(event.page.x - pos.x - this.view.w/2) : Math.round(-event.page.x + oldx + this.view.w/2);
-	this.view.y = (this.hei < this.view.h)? Math.round(event.page.y - pos.y - this.view.h/2) : Math.round(-event.page.y + oldy + this.view.h/2);
+	this.view.x = event.page.x - pos.x - Math.round(this.view.w/2);
+	this.view.y = event.page.y - pos.y - Math.round(this.view.h/2);
       }
       else{
 	// For zooms with the mouse over the navigation window
@@ -854,7 +842,8 @@ var IIPMooViewer = new Class({
       this.view.res++;
 
       var xoffset = (this.resolutions[this.view.res-1].w > this.view.w) ? this.view.w : this.resolutions[this.view.res-1].w;
-      this.view.x = Math.round( 2*(this.view.x + xoffset/4) );
+      //this.view.x = Math.round( 2*(this.view.x + xoffset/4) );
+      this.view.x = Math.round( 2*(this.view.x + this.view.w/4) );
       this.view.y = Math.round( 2*(this.view.y + this.view.h/4) );
 
       this._zoom();
@@ -917,7 +906,7 @@ var IIPMooViewer = new Class({
 
     // Delete our image tiles
     //this.canvas.getChildren('img').destroy();
-    this.canvas.width = this.canvas.width;
+    //this.canvas.width = this.canvas.width;
 
     this.tiles.empty();
 
@@ -1049,6 +1038,7 @@ var IIPMooViewer = new Class({
     this.canvas = new Element('canvas', {
       'id': 'images',
       'styles': { 'position': 'absolute' },
+      'html': 'Your browser does\'nt support HTML5 canvas!',
       'morph': {
 	transition: Fx.Transitions.Quad.easeInOut,
 	onComplete: function(){

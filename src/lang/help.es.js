@@ -12,5 +12,6 @@ IIPMooViewer.lang = {
 	'exitFullscreen': 'Presionar "Esc" para salir del modo pantalla completa',
 	'loading': 'cargando',
 	'drag': '* Arrastrar para mover<br/>* Doble "click" para mostrar/ocultar botones<br/>* Presionar "h" para ocultar',
+	'dragcont': '* Arrastrar para mover<br/>* Presionar "h" para ocultar',
 	'annotationsDisabled': 'Anotaciones desactivadas<br/>Presionar "a" para reactivar'
 };

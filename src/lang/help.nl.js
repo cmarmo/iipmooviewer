@@ -12,5 +12,6 @@ IIPMooViewer.lang = {
 	'exitFullscreen': 'Toets "Esc" om de volledige schermweergave te verlaten.',
 	'loading': 'Laden',
 	'drag': '* Sleep om te verplaatsen<br/>* Dubbel klik om de knoppen te verbergen of te tonen<br/>* Toets "h" om te verbergen',
+	'dragcont': '* Sleep om te verplaatsen<br/>* Toets "h" om te verbergen',
 	'annotationsDisabled': 'Annotaties uitgeschakeld<br/>Toets "a" om deze weer in te schakelen'
 };

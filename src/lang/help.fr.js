@@ -12,5 +12,6 @@ IIPMooViewer.lang = {
 	'exitFullscreen': "Pour quitter le plein écran: appuyez sur la touche «Esc»",
 	'loading': "chargement",
 	'drag': "* Faites glisser pour déplacer la fenetre de navigation<br/>* Double-cliquez pour masquer/afficher les bouttons<br/>* Appuyez sur la touche «h» pour masquer la fenêtre de navigation",
+	'dragcont': "* Faites glisser pour déplacer la fenetre de navigation<br/>* Appuyez sur la touche «h» pour masquer la fenêtre de navigation",
 	'annotationsDisabled': "Annotations désactivés<br/>Appuyez sur la touch «a» pour les réactiver"
 };
