@@ -13,5 +13,6 @@ IIPMooViewer.lang = {
 	'loading': 'loading',
 	'drag': '* Drag to move<br/>* Double Click to show/hide buttons<br/>* Press h to hide',
 	'dragcont': '* Drag to move<br/>* Press h to hide',
+	'draghead': '* Drag to move',
 	'annotationsDisabled': 'Annotations disabled<br/>Press "a" to re-enable'
 };
