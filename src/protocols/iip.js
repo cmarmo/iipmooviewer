@@ -5,16 +5,23 @@ Protocols.IIP = new Class({
 
   /* Return metadata URL
    */
-  getMetaDataURL: function(image){
-    return "FIF=" + image + "&obj=IIP,1.0&obj=Max-size&obj=Tile-size&obj=Resolution-number";
+  getMetaDataURL: function(server,image){
+    return server+"?FIF=" + image + "&obj=IIP,1.0&obj=Max-size&obj=Tile-size&obj=Resolution-number";
   },
 
   /* Return an individual tile request URL
    */
-  getTileURL: function(server,image,resolution,sds,min,max,cnt,gamma,k,x,y){
-    var minmax='';
-    if (min && max) minmax = '&MINMAX=1,'+min+','+max;
-    return server+"?FIF="+image+"&CNT="+cnt+"&GAM="+gamma+minmax+"&SDS="+sds+"&JTL="+resolution+"," + k;	
+  getTileURL: function(t){
+    var modifiers = Array( '?FIF=' + t.image );
+    if( t.contrast ) modifiers.push( 'CNT=' + t.contrast );
+    if( t.sds )      modifiers.push( 'SDS=' + t.sds );
+    if( t.rotation ) modifiers.push( 'ROT=' + t.rotation );
+    if( t.gamma )    modifiers.push( 'GAM=' + t.gamma );
+    if( t.shade )    modifiers.push( 'SHD=' + t.shade );
+    if( t.cmp )      modifiers.push( 'CMP=' + t.cmp );
+    if( t.minmax )   modifiers.push( 'MINMAX=1,' + t.mincut + ',' + t.maxcut );
+    modifiers.push( 'JTL=' + t.resolution + ',' + t.tileindex );
+    return t.server+modifiers.join('&');
   },
 
   /* Parse an IIP protocol metadata request
@@ -41,11 +48,9 @@ Protocols.IIP = new Class({
 
   /* Return URL for a full view
    */
-  getRegionURL: function(image,x,y,w,h,min,max){
-    var rgn = x + ',' + y + ',' + w + ',' + h;
-    var minmax='';
-    if (min && max) minmax = '&MINMAX=1,'+min+','+max;
-    return '?FIF='+image+minmax+'&WID='+w+'&RGN='+rgn+'&CVT=jpeg';
+  getRegionURL: function(server,image,region,width){
+    var rgn = region.x + ',' + region.y + ',' + region.w + ',' + region.h;
+    return server+'?FIF='+image+'&WID='+width+'&RGN='+rgn+'&CVT=jpeg';
   },
 
   /* Return URL for parsing min and max
@@ -79,6 +84,12 @@ Protocols.IIP = new Class({
       'maxarray': maxarray
     };
     return result;
+  },
+
+  /* Return thumbnail URL
+   */
+  getThumbnailURL: function(server,image,width){
+    return server+'?FIF='+image+'&WID='+width+'&QLT=98&CVT=jpeg';
   }
 
 });

@@ -156,7 +156,7 @@ IIPMooViewer.implement({
   },
 
   // Determine if a point is inside the annotation's bounds
-  isInAnnotation = function(px, py) {
+  isInAnnotation : function(px, py) {
   // All we have to do is make sure the Mouse X,Y fall in the area between
   // the annotation's X and (X + Height) and its Y and (Y + Height)
   return  (this.wid * this.annotations[i].x <= mx) && (this.wid * this.annotations[i].x + this.wid * this.annotations[i].w >= mx) &&
