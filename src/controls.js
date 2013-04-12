@@ -318,7 +318,7 @@ IIPMooViewer.implement({
              document.getElementById('opacity-value'+j).setStyle('font-weight', 'bold');
              document.getElementById('opacity-value'+j).set('html', newopa.toFixed(2));
              _this.images[j].opacity=newopa;
-             _this.requestImages();
+	     _this.canvas.getChildren('img').setStyle('opacity', newopa);
            } else {
              document.getElementById('opacity-value'+i).setStyle('font-weight', 'bold');
              document.getElementById('opacity-value'+i).set('html', '1');
@@ -350,85 +350,15 @@ IIPMooViewer.implement({
            var dop = 100 / (_this.images.length-1);
            _this.images[0].opacity = 1;
 
-           //_this.images[1].opacity = pos/dop;
            for (var i=1; i<_this.images.length; i++){
              _this.images[i].opacity = (pos > i*dop)? 1:(pos/dop)-i+1;
+	     var img = _this.canvas.getChildren('img');
+	     for (var j=0; j<img.length; j++) {
+               if (img[j].hasClass('layer'+i)) img[j].setStyle('opacity', _this.images[i].opacity);
+             }
            }
-           _this.requestImages();
         }
     });
-  },
-
-  // Create color picker
-  CreateColorPicker: function() {
-    if ( !this.controlsWindow ) this.CreateControlWin();
-
-    var cbox = Array(this.images.length);
-    var cpick = Array(this.images.length);
-    _this = this;
-    for (i=0; i<this.images.length; i++){
-	if (this.controlsWindow.getElementById('layerimg'+i)) (this.controlsWindow.getElementById('layerimg'+i)).setStyle('display','hidden');
-        var imdiv = this.controlsWindow.getElementById('imname'+i);
-        var form = new Element ('form', {'id': 'checkim'+i}).inject(imdiv);
-        cbox[i] = new Element ('input', {
-          'id': 'layercol'+i,
-          'type': 'checkbox',
-          'name': 'layercolor',
-          'value': i,
-          'styles': {
-                  'position': 'relative',
-                  //'left': '40px',
-                  'top': '20px'
-                  }
-        }).inject(form);
-	if ( _this.images[i].opacity ) cbox[i].set('checked','true');
-        cbox[i].addEvent('click', function() {
-           var j = cbox.indexOf(this);
-           if (j!=-1) {
-	     if (!(_this.images[j].opacity)) {
-               cbox[j].set('checked','true');
-               _this.images[j].opacity = 1.0;
-             } else { 
-               cbox[j].checked=false;
-               _this.images[j].opacity = 0;
-             }
-             _this.requestImages();
-           }
-        });
-	var label = new Element('label', {
-          'styles': {
-                  'position': 'relative',
-                  'left': '40px',
-                  //'top': '10px'
-                  }
-        }).inject('checkim'+i, 'after');
-	var imginput = new Element('img', {
-		'src': 'images/rainbow.png',
-		}).inject(label);
-	var labinput = new Element('input', {
-		'id': 'imageColor'+i,
-		'class': 'imageColor',
-		//'type': 'hidden',
-		'styles': { 'visibility': 'hidden', 'width' : '0px', 'height': '0px', 'display' : 'none' },
-		'size': 1
-		}).inject(label);
-	cpick[i] = new MooRainbow('imageColor'+i, {
-		id: 'Rainbow'+i,
-		startColor: (_this.images[i].color!=null)?
-            [ _this.images[i].color[0]*255, _this.images[i].color[1]*255, _this.images[i].color[2]*255 ] :
-            [255, 255, 255],
-		imgPath: 'images/',
-	});
-	cpick[i].addEvent('complete', function(color) {
-		var j = cpick.indexOf(this);
-                if (j!=-1) {
-	          var tmpcolor = Array(color.rgb.length);
-		  for (c=0; c<color.rgb.length; c++) tmpcolor[c] = color.rgb[c] / 255.;
-		  _this.images[j].color = tmpcolor;
-                  _this.requestImages();
-                }
-	});
-     }
   },
 
   // Create Layer Menu
@@ -448,17 +378,23 @@ IIPMooViewer.implement({
         'value': i,
       }).inject(form);
       pradio[i].addEvent('click', function() {
+	   var img = _this.canvas.getChildren('img');
            var j = pradio.indexOf(this);
            if (j!=-1) {
 	     for (t=0; t<_this.images.length; t++) {
                if (t!=j) {
 		 _this.images[t].opacity=0;
                  pradio[t].checked=false;
+	         for (var l=0; l<img.length; l++) {
+                   if (img[l].hasClass('layer'+t)) img[l].setStyle('opacity', _this.images[t].opacity);
+                 }
                }
                pradio[j].set('checked','true');
                _this.images[j].opacity = 1.0;
+	       for (var l=0; l<img.length; l++) {
+                 if (img[l].hasClass('layer'+j)) img[l].setStyle('opacity', _this.images[j].opacity);
+               }
              }
-             _this.requestImages();
 	   }  
        });
     }

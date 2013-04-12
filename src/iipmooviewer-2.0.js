@@ -162,6 +162,9 @@ var IIPMooViewer = new Class({
     // Show contrast controls
     this.showContrastControl = options.showContrastControl || false;
 
+    // Show opacity controls
+    this.showOpacityControl = options.showOpacityControl || false;
+
     // Show gamma controls
     this.showGammaControl = options.showGammaControl || false;
 
@@ -411,6 +414,7 @@ var minmin = ''; var maxmax = '';
 	  sds: (this.images[n].sds||'0,90'),
           contrast: (this.images[n].cnt||null),
 	  gamma: (this.images[n].gam||null),
+	  cmp: (this.images[n].cmp||null),
           mincut: minmin,
           maxcut: maxmax,
           tileindex: k,
@@ -1147,6 +1151,9 @@ var minmin = ''; var maxmax = '';
 
     // Add contrast controls if asked
     if (this.showContrastControl) this.CreateContrastControl();
+
+    // Add opacity controls if asked
+    if (this.showOpacityControl) this.CreateOpacityControl();
 
     // Add the blending bar if asked
     if (this.showBlendingBar) this.CreateBlendingBar();
