@@ -27,13 +27,20 @@ IIPMooViewer.implement({
 
   // Create controls window
   CreateControlWin: function() {
+/*
+    var navwindow =  document.getElementById('navcoord');
     this.controlsWindow = new Element('div', {
       'class': 'controls',
-      //'title': 'draggable controls',
-    }).inject(this.source);
+    }).inject(navwindow);
+*/
+    this.controlsWindow = new Element('div', {
+      'class': 'controls',
+    }).inject(this.container);
+
     var toolbar = new Element( 'div', {
       'class': 'toolbar',
     });
+
     toolbar.store( 'tip:text', IIPMooViewer.lang.dragcont );
     toolbar.inject(this.controlsWindow);
     /*var globaldiv = new Element('div', {
@@ -45,9 +52,10 @@ IIPMooViewer.implement({
       var imdiv = new Element('div', {
         'id': 'imname'+i,
         'class': 'text',
-        'html': '<p id="impar'+i+'">...'+(this.images[i].src).slice(-50)+'</p>',
+ //       'html': '<p id="impar'+i+'">...'+this.images[i].label+'</p>',
       }).inject(this.controlsWindow);
     }
+
     this.controlsWindow.makeDraggable({
 	container: this.container,
         handle:toolbar,
@@ -56,8 +64,8 @@ IIPMooViewer.implement({
 	   var pos = this.controlsWindow.getPosition();
 	   this.cwpos = {x: pos.x, y: pos.y-10};
 	 }.bind(this),
-         //onComplete: this.scrollNavigation.bind(this)
     });
+
   },
 
   /* Toggle the visibility of our control window
@@ -82,7 +90,7 @@ IIPMooViewer.implement({
       var conPar = new Element('p', {
         'id': 'conslider'+i,
         'class': 'text',
-        'html': 'Set image contrast: <span id="contrast-factor'+i+'"></span>'
+        'html': 'Contrast: <span id="contrast-factor'+i+'"></span>'
       }).inject(imdiv);
       var area = new Element('div', {
           'id': 'conarea'+i,
@@ -142,7 +150,7 @@ IIPMooViewer.implement({
            if (j!=-1) {
              document.getElementById('gamma-factor'+j).setStyle('font-weight', 'bold');
              document.getElementById('gamma-factor'+j).set('html', newgam.toFixed(2));
-             _this.images[j].gamma=(1./newgam).toFixed(2);
+             _this.images[j].gam=(1./newgam).toFixed(2);
              _this.requestImages();
            } else {
              document.getElementById('gamma-factor'+i).setStyle('font-weight', 'bold');
@@ -176,6 +184,7 @@ IIPMooViewer.implement({
       }).inject(imdiv);
       minInp[i] = new Element('input',{
 	'id': 'minimum'+i,
+        'value': 0
       }).inject(minPar);
       var maxPar = new Element('p', {
         'id': 'maxslider'+i,
@@ -184,6 +193,7 @@ IIPMooViewer.implement({
       }).inject(imdiv);
       maxInp[i] = new Element('input',{
 	'id': 'maximum'+i,
+        'value': 0
       }).inject(maxPar);
 
       var minarea = new Element('div', {
@@ -243,6 +253,7 @@ IIPMooViewer.implement({
           if (j>-1) {
             _this.images[j].minarray = result.minarray;
             _this.images[j].maxarray = result.maxarray;
+//console.log(_this.images[j].minarray[0]);
             document.getElementById('minimum'+j).set('value', _this.images[j].minarray[0]);
             document.getElementById('maximum'+j).set('value', _this.images[j].maxarray[0]);
             minslider[j].set(_this.images[j].minarray[0]);
@@ -251,7 +262,6 @@ IIPMooViewer.implement({
         },
 	onFailure: function(){ alert('Error: Unable to get image minimum and maximum from server!'); }
 	} );
-      minmaxreq[i].send( this.protocol.getMinMaxURL(this.images[i].src) );
 
 
       minInp[i].addEvent('change', function(){
@@ -270,6 +280,10 @@ IIPMooViewer.implement({
              _this.requestImages();
 	   }
       });
+
+      minmaxreq[i].send( this.protocol.getMinMaxURL(this.images[i].src) );
+//console.log(this.images[i].minarray[0]);
+//console.log(this.images[i].maxarray[0]);
     }
   },
 
@@ -315,6 +329,36 @@ IIPMooViewer.implement({
     }
   },
 
+  // Create the blending bar
+  CreateBlendingBar: function() {
+    if ( !this.controlsWindow ) this.CreateControlWin();
+
+    var imdiv = this.controlsWindow;
+    var area = new Element('div', {
+        'id': 'blendarea',
+        'class': 'blendarea'
+    }).inject(imdiv);
+    var knob = new Element('div', {
+        'id': 'blendknob',
+        'class': 'blendknob'
+    }).inject(area);
+    var _this = this;
+    var slider = new Slider( area, knob, {
+        range: [0,100],
+        mode: 'vertical',
+        onComplete: function(pos){
+           var dop = 100 / (_this.images.length-1);
+           _this.images[0].opacity = 1;
+
+           //_this.images[1].opacity = pos/dop;
+           for (var i=1; i<_this.images.length; i++){
+             _this.images[i].opacity = (pos > i*dop)? 1:(pos/dop)-i+1;
+           }
+           _this.requestImages();
+        }
+    });
+  },
+
   // Create color picker
   CreateColorPicker: function() {
     if ( !this.controlsWindow ) this.CreateControlWin();
@@ -325,12 +369,17 @@ IIPMooViewer.implement({
     for (i=0; i<this.images.length; i++){
 	if (this.controlsWindow.getElementById('layerimg'+i)) (this.controlsWindow.getElementById('layerimg'+i)).setStyle('display','hidden');
         var imdiv = this.controlsWindow.getElementById('imname'+i);
-        var form = new Element ('form', {'id': 'checkim'+i}).inject('impar'+i,'after');
+        var form = new Element ('form', {'id': 'checkim'+i}).inject(imdiv);
         cbox[i] = new Element ('input', {
           'id': 'layercol'+i,
           'type': 'checkbox',
           'name': 'layercolor',
           'value': i,
+          'styles': {
+                  'position': 'relative',
+                  //'left': '40px',
+                  'top': '20px'
+                  }
         }).inject(form);
 	if ( _this.images[i].opacity ) cbox[i].set('checked','true');
         cbox[i].addEvent('click', function() {
@@ -349,8 +398,8 @@ IIPMooViewer.implement({
 	var label = new Element('label', {
           'styles': {
                   'position': 'relative',
-                  'left': '20px',
-                  'top': '-20px'
+                  'left': '40px',
+                  //'top': '10px'
                   }
         }).inject('checkim'+i, 'after');
 	var imginput = new Element('img', {
@@ -359,7 +408,8 @@ IIPMooViewer.implement({
 	var labinput = new Element('input', {
 		'id': 'imageColor'+i,
 		'class': 'imageColor',
-		'type': 'hidden',
+		//'type': 'hidden',
+		'styles': { 'visibility': 'hidden', 'width' : '0px', 'height': '0px', 'display' : 'none' },
 		'size': 1
 		}).inject(label);
 	cpick[i] = new MooRainbow('imageColor'+i, {
@@ -390,7 +440,7 @@ IIPMooViewer.implement({
     for (i=0; i<this.images.length; i++){
       if (this.controlsWindow.getElementById('layercol'+i)) (this.controlsWindow.getElementById('layercol'+i)).setStyle('display','hidden');
       var imdiv = this.controlsWindow.getElementById('imname'+i);
-      var form = new Element ('form').inject('impar'+i,'after');
+      var form = new Element ('form').inject(imdiv);
       pradio[i] = new Element ('input', {
         'id': 'layerimg'+i,
         'type': 'radio',
