@@ -27,57 +27,28 @@ IIPMooViewer.implement({
 
   // Create controls window
   CreateControlWin: function() {
-/*
-    var navwindow =  document.getElementById('navcoord');
+
+    var navwindow =  document.getElementById('navcontainer');
     this.controlsWindow = new Element('div', {
       'class': 'controls',
+      'styles': { 'width':  this.navigation.size.x,
+                  'text-align': 'left' }
     }).inject(navwindow);
-*/
-    this.controlsWindow = new Element('div', {
-      'class': 'controls',
-    }).inject(this.container);
 
-    var toolbar = new Element( 'div', {
-      'class': 'toolbar',
-    });
-
-    toolbar.store( 'tip:text', IIPMooViewer.lang.dragcont );
-    toolbar.inject(this.controlsWindow);
     /*var globaldiv = new Element('div', {
       'id': 'globcontrols',
       'class': 'text',
       'html': '<p>Global controls</p>',
     }).inject(this.controlsWindow);*/
     for (i=0; i<this.images.length; i++){
+      var n = (this.images[i].src.split("/")).length-1;
       var imdiv = new Element('div', {
         'id': 'imname'+i,
         'class': 'text',
- //       'html': '<p id="impar'+i+'">...'+this.images[i].label+'</p>',
+        'html': '<p id="impar'+i+'">'+(this.images[i].src.split("/"))[n]+'</p>',
       }).inject(this.controlsWindow);
     }
-
-    this.controlsWindow.makeDraggable({
-	container: this.container,
-        handle:toolbar,
-         // Take a note of the starting coords of our drag zone
-         onStart: function() {
-	   var pos = this.controlsWindow.getPosition();
-	   this.cwpos = {x: pos.x, y: pos.y-10};
-	 }.bind(this),
-    });
-
   },
-
-  /* Toggle the visibility of our control window
-   */
-  toggleControlWindow: function(){
-    // For removing the control window if it exists - must use the get('reveal')
-    // otherwise we do not have the Mootools extended object
-    if( this.container.getElement('div.controls') ){
-      this.container.getElement('div.controls').get('reveal').toggle();
-    }
-  },
-
 
 
   // Create contrast controls
@@ -90,11 +61,15 @@ IIPMooViewer.implement({
       var conPar = new Element('p', {
         'id': 'conslider'+i,
         'class': 'text',
-        'html': 'Contrast: <span id="contrast-factor'+i+'"></span>'
+        'html': 'Contrast: <span id="contrast-factor'+i+'"></span>',
+        'styles': { 'position': 'relative',
+                    'bottom' : '15px'}
       }).inject(imdiv);
       var area = new Element('div', {
           'id': 'conarea'+i,
-          'class': 'conarea'
+          'class': 'conarea',
+          'styles': { 'position': 'relative',
+                    'bottom' : '15px'}
       }).inject(imdiv);
       var knob = new Element('div', {
          'id': 'conknob'+i,
@@ -336,8 +311,10 @@ IIPMooViewer.implement({
     var imdiv = this.controlsWindow;
     var area = new Element('div', {
         'id': 'blendarea',
-        'class': 'blendarea'
-    }).inject(imdiv);
+        'class': 'blendarea',
+        'styles': { 'height': this.controlsWindow.getStyle('height'),
+                    'top': '20px' }
+    }).inject(imdiv,'top');
     var knob = new Element('div', {
         'id': 'blendknob',
         'class': 'blendknob'
@@ -369,13 +346,16 @@ IIPMooViewer.implement({
     var pradio = Array(this.images.length);
     for (i=0; i<this.images.length; i++){
       if (this.controlsWindow.getElementById('layercol'+i)) (this.controlsWindow.getElementById('layercol'+i)).setStyle('display','hidden');
-      var imdiv = this.controlsWindow.getElementById('imname'+i);
-      var form = new Element ('form').inject(imdiv);
+      var imdiv = this.controlsWindow.getElementById('impar'+i);
+      var form = new Element ('form').inject(imdiv,'after');
       pradio[i] = new Element ('input', {
         'id': 'layerimg'+i,
         'type': 'radio',
         'name': 'layer',
         'value': i,
+        'styles': { 'position': 'relative',
+                    'bottom': '25px',
+                    'left': '100px'}
       }).inject(form);
       pradio[i].addEvent('click', function() {
 	   var img = _this.canvas.getChildren('img');

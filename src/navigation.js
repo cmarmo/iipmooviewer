@@ -33,25 +33,6 @@ var Navigation = new Class({
     this.options.showNavButtons = (options.showNavButtons == false) ? false : true;
     this.options.navWinSize = options.navWinSize || 0.2;
     this.options.showCoords = (options.showCoords == true) ? true : false;
-
-    // Show contrast controls
-    this.options.showContrastControl = (options.showContrastControl == true) ? true : false;
-
-    // Show opacity controls
-    this.options.showOpacityControl = (options.showOpacityControl == true) ? true : false;
-
-    // Show gamma controls
-    this.options.showGammaControl = (options.showGammaControl == true) ? true : false;
-
-    // Show min max controls
-    this.options.showMinMaxControl = (options.showMinMaxControl == true) ? true : false;
-
-    // Show the blending bar
-    this.options.showBlendingBar = (options.showBlendingBar == true) ? true : false;
-
-    // Show Layer switch
-    this.options.showLayerSwitch = (options.showLayerSwitch == true) ? true : false;
-
     this.prefix = options.prefix;
   },
 
@@ -64,6 +45,7 @@ var Navigation = new Class({
     if( (!this.options.showNavWindow) && (!this.options.showNavButtons) ) return;
 
     this.navcontainer = new Element( 'div',{
+      'id': 'navcontainer',
       'class': 'navcontainer',
       'styles': { width: this.size.x }
     });
@@ -195,25 +177,6 @@ var Navigation = new Class({
       loadBarContainer.inject(this.navcontainer);
 
     }
-
-
-    // Add contrast controls if asked
-    if (this.showContrastControl) this.CreateContrastControl();
-
-    // Add opacity controls if asked
-    if (this.showOpacityControl) this.CreateOpacityControl();
-
-    // Add the blending bar if asked
-    if (this.showBlendingBar) this.CreateBlendingBar();
-
-    // Add gamma controls if asked
-    if (this.showGammaControl) this.CreateGammaControl();
-
-    // Add min max controls if asked
-    if (this.showMinMaxControl) this.CreateMinMaxControl();
-
-    // Add layer switch if asked
-    if (this.showLayerSwitch) this.CreateLayerSwitch();
 
     // Inject our navigation container into our holding div
     this.navcontainer.inject(container);

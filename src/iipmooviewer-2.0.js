@@ -1149,24 +1149,6 @@ var minmin = ''; var maxmax = '';
     // Add a scale if requested
     if( this.scale ) this.scale.create(this.container);
 
-    // Add contrast controls if asked
-    if (this.showContrastControl) this.CreateContrastControl();
-
-    // Add opacity controls if asked
-    if (this.showOpacityControl) this.CreateOpacityControl();
-
-    // Add the blending bar if asked
-    if (this.showBlendingBar) this.CreateBlendingBar();
-
-    // Add gamma controls if asked
-    if (this.showGammaControl) this.CreateGammaControl();
-
-    // Add min max controls if asked
-    if (this.showMinMaxControl) this.CreateMinMaxControl();
-
-    // Add layer switch if asked
-    if (this.showLayerSwitch) this.CreateLayerSwitch();
-
     // Calculate some sizes and create the navigation window
     this.calculateSizes();
     if( this.navigation){
@@ -1195,6 +1177,25 @@ var minmin = ''; var maxmax = '';
 	'zoom': this.zoom.bind(this)
      });
     }
+
+    // Add contrast controls if asked
+    if (this.showContrastControl) this.CreateContrastControl();
+
+    // Add opacity controls if asked
+    if (this.showOpacityControl) this.CreateOpacityControl();
+
+    // Add the blending bar if asked
+    if (this.showBlendingBar) this.CreateBlendingBar();
+
+    // Add gamma controls if asked
+    if (this.showGammaControl) this.CreateGammaControl();
+
+    // Add min max controls if asked
+    if (this.showMinMaxControl) this.CreateMinMaxControl();
+
+    // Add layer switch if asked
+    if (this.showLayerSwitch) this.CreateLayerSwitch();
+
     if( this.annotations ) this.createAnnotations();
 
 

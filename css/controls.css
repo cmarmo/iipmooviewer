@@ -1,30 +1,13 @@
-div#title {
-  font-family: Verdana, sans-serif;
-  color: #bbbbbb;
-  background: transparent;
-  position: absolute;
-  margin: 0px;
-  bottom: 64px;
-  font-weight: bold;
-  font-size: 100%;
-  text-align: center;
-  text-shadow: 5px 5px 5px rgba(0,0,0,0.8);
-}
 /* controls window */
 div.controls {
-left: 8px;
-top: 48px;
-  padding: 3px;
+  position: absolute;
+  padding: 0px;
   background: #222;
   opacity: 0.70;
   cursor: default;
   color: #bbb;
   font-size: 65%;
   font-weight: normal;
-  width: 15%;
-  position: absolute;
-#  border: 4px inset grey; 
-  min-width: 120px;
   margin: 0;
   z-index: 2;
  -moz-border-radius: 0.5em;
@@ -52,8 +35,6 @@ div.blendarea {
       background: transparent;
       border: 1px solid #bbbbbb;
       position: absolute;
-      top: 20px;
-      height: 70px;
       right: 5px;
       width: 12px;
 }
@@ -117,24 +98,4 @@ p.maxtext {
 input {
     width:35px;
 }
-
-.controls .toolbar {
-  height: 8px;
-  cursor: move;
-  width: 100%;
-  opacity: 0.8;
-  /* Cross browser CSS gradients from http://www.colorzilla.com/gradient-editor/ */
-  background: #a9aba6; /* Old browsers */
-  box-shadow: inset 5px 5px 5px rgba(0,0,0,0.5);
-
-//  background: -moz-linear-gradient(top, #a9aba6 0%, #c0c2be 22%, #d5d5d2 33%, #e2e1dd 44%, #ededed 56%, #bebec1 67%, #c3c3c2 78%, #a1a4a0 89%, #878686 100%) repeat-x; /* FF3.6+ */
-//  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#a9aba6), color-stop(22%,#c0c2be), color-stop(33%,#d5d5d2), color-stop(44%,#e2e1dd), color-stop(56%,#ededed), color-stop(67%,#bebec1), color-stop(78%,#c3c3c2), color-stop(89%,#a1a4a0), color-stop(100%,#878686)) repeat-x; /* Chrome,Safari4+ */
-//  background: -webkit-linear-gradient(top, #a9aba6 0%,#c0c2be 22%,#d5d5d2 33%,#e2e1dd 44%,#ededed 56%,#bebec1 67%,#c3c3c2 78%,#a1a4a0 89%,#878686 100%) repeat-x; /* Chrome10+,Safari5.1+ */
-//  background: -o-linear-gradient(top, #a9aba6 0%,#c0c2be 22%,#d5d5d2 33%,#e2e1dd 44%,#ededed 56%,#bebec1 67%,#c3c3c2 78%,#a1a4a0 89%,#878686 100%) repeat-x; /* Opera11.10+ */
-//  background: -ms-linear-gradient(top, #a9aba6 0%,#c0c2be 22%,#d5d5d2 33%,#e2e1dd 44%,#ededed 56%,#bebec1 67%,#c3c3c2 78%,#a1a4a0 89%,#878686 100%) repeat-x; /* IE10+ */
-//  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ededed', endColorstr='#6f706d',GradientType=0 ); /* IE6-9 */
-//  background: linear-gradient(top, #a9aba6 0%,#c0c2be 22%,#d5d5d2 33%,#e2e1dd 44%,#ededed 56%,#bebec1 67%,#c3c3c2 78%,#a1a4a0 89%,#878686 100%) repeat-x; /* W3C */
-}
-
-.controls .toolbar:hover { opacity: 1.0 }
 
