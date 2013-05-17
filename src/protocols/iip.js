@@ -6,7 +6,7 @@ Protocols.IIP = new Class({
   /* Return metadata URL
    */
   getMetaDataURL: function(server,image){
-    return server+"?FIF=" + image + "&obj=IIP,1.0&obj=Max-size&obj=Tile-size&obj=Resolution-number";
+    return server+"?FIF=" + image + "&obj=IIP,1.0&obj=Max-size&obj=Tile-size&obj=Resolution-number&obj=Min-Max-sample-values";
   },
 
   /* Return an individual tile request URL
@@ -19,7 +19,7 @@ Protocols.IIP = new Class({
     if( t.gamma )    modifiers.push( 'GAM=' + t.gamma );
     if( t.shade )    modifiers.push( 'SHD=' + t.shade );
     if( t.cmp )      modifiers.push( 'CMP=' + t.cmp );
-    if( t.minmax )   modifiers.push( 'MINMAX=1,' + t.mincut + ',' + t.maxcut );
+    if( t.mincut && t.maxcut )   modifiers.push( 'MINMAX=1,' + t.mincut + ',' + t.maxcut );
     modifiers.push( 'JTL=' + t.resolution + ',' + t.tileindex );
     return t.server+modifiers.join('&');
   },
@@ -38,10 +38,29 @@ Protocols.IIP = new Class({
 		     h: parseInt(size[1]) };
     tmp = response.split( "Resolution-number" );
     var num_resolutions = parseInt( tmp[1].substring(1,tmp[1].length) );
+    tmp = response.split( "Min-Max-sample-values:" );
+    if(!tmp[1]) alert( "Error: Unexpected response from server " + this.server );
+    var minmax = tmp[1].split(" ");
+    var arraylen = Math.floor(minmax.length / 2);
+    var minarray = new Array();
+    var maxarray = new Array();
+    var n = 0;
+    for (var l=0; l<minmax.length, n<arraylen; l++) {
+      if (minmax[l]!="") {
+        minarray.push(parseFloat( minmax[l]));
+        n++;
+      }
+    }
+    for (var ll=l; ll<minmax.length; ll++) {
+      if (minmax[l]!="")
+        maxarray.push(parseFloat( minmax[l] ))
+    }
     var result = {
       'max_size': max_size,
       'tileSize': tileSize,
-      'num_resolutions': num_resolutions
+      'num_resolutions': num_resolutions,
+      'minarray': minarray,
+      'maxarray': maxarray
     };
     return result;
   },
@@ -57,33 +76,6 @@ Protocols.IIP = new Class({
    */
   getMinMaxURL: function(image){
     return "FIF=" + image + "&obj=IIP,1.0&obj=Min-Max-sample-values";
-  },
-
-  /* Parsing min and max
-   */
-  parseMinMax: function(response){
-    var tmp = response.split( "Min-Max-sample-values" );
-    if(!tmp[1]) alert( "Error: Unexpected response from server " + this.server );
-    var minmax = tmp[1].split(" ");
-    var arraylen = Math.floor(minmax.length / 2);
-    var minarray = new Array();
-    var maxarray = new Array();
-    var n = 0;
-    for (var l=0; l<minmax.length, n<arraylen; l++) {
-      if (parseFloat(minmax[l])) {
-        minarray.push(parseFloat( minmax[l]));
-        n++;
-      }
-    }
-    for (var ll=l; ll<minmax.length; ll++) {
-      if (parseFloat(minmax[l]))
-        maxarray.push(parseFloat( minmax[l] ))
-    }
-    var result = {
-      'minarray': minarray,
-      'maxarray': maxarray
-    };
-    return result;
   },
 
   /* Return thumbnail URL
