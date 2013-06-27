@@ -1,75 +1,76 @@
 /*
-   IIPMooViewer 2.0
-   IIPImage Javascript Viewer <http://iipimage.sourceforge.net>
+IIPMooViewer 2.0
+IIPImage Javascript Viewer <http://iipimage.sourceforge.net>
 
-   Copyright (c) 2007-2013 Ruven Pillay <ruven@users.sourceforge.net>
+Copyright (c) 2007-2013 Ruven Pillay <ruven@users.sourceforge.net>
 
-   ---------------------------------------------------------------------------
+---------------------------------------------------------------------------
 
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 3 of the License, or
-   (at your option) any later version.
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 
-   ---------------------------------------------------------------------------
+---------------------------------------------------------------------------
 
-   Built using the Mootools 1.4.5 javascript framework <http://www.mootools.net>
+Built using the Mootools 1.4.5 javascript framework <http://www.mootools.net>
 
 
-   Usage Example:
+Usage Example:
 
-   viewer = new IIPMooViewer( 'div_id', { server: '/fcgi-bin/iipsrv.fcgi',
-                              image: '/images/test.tif',
-                              credit: 'copyright me 2011',
-			      prefix: '/prefix/',
-			      render: 'random',
-                              showNavButtons: whether to show navigation buttons: true (default) or false
-			      scale: 100 } );
+viewer = new IIPMooViewer( 'div_id', { server: '/fcgi-bin/iipsrv.fcgi',
+image: '/images/test.tif',
+credit: 'copyright me 2011',
+prefix: '/prefix/',
+render: 'random',
+showNavButtons: whether to show navigation buttons: true (default) or false
+scale: 100 } );
 
-   where the arguments are:
-	i) The id of the main div element in which to create the viewer window
-	ii) A hash containting:
-	      image: the full image path (or array of paths) on the server (required)
-              server: the iipsrv server full URL (defaults to "/fcgi-bin/iipsrv.fcgi")
-	      credit: image copyright or information (optional)
-	      prefix: path prefix if images or javascript subdirectory moved (default 'images/')
-              render: tile rendering style - 'spiral' for a spiral from the centre or
-                      'random' for a rendering of tiles in a random order
-	      scale: pixels per mm
-	      showNavWindow: whether to show the navigation window. Default true
-	      showNavButtons: whether to show the navigation buttons. Default true
-	      showCoords: whether to show live screen coordinates. Default false
-	      protocol: iip (default), zoomify or deepzoom
-	      enableFullscreen: allow full screen mode. Default true
-	      viewport: object containing x, y, resolution, rotation of initial view
-	      winResize: whether view is reflowed on window resize. Default true
-              showContrastControl: whether to show contrast control: false, true or global. Default false.
-              showGammaControl: whether to show gamma control: false, true or global. Default false.
-              showMiMaxControl: whether to show min max control: Default false.
-              showOpacityControl: whether to show opacity control: false, true or global. Default false. 
-              showBlendingBar: whether to show the blending bar: false, true or global. Default false. 
-              showContrastControl: whether to show contrast control: false, true or global. Default false.
-              showLayerSwitch: whether to show layer switcher: Default false.
-	      preload: load extra surrounding tiles
+where the arguments are:
+i) The id of the main div element in which to create the viewer window
+ii) A hash containting:
+image: the full image path (or array of paths) on the server (required)
+server: the iipsrv server full URL (defaults to "/fcgi-bin/iipsrv.fcgi")
+credit: image copyright or information (optional)
+prefix: path prefix if images or javascript subdirectory moved (default 'images/')
+render: tile rendering style - 'spiral' for a spiral from the centre or
+'random' for a rendering of tiles in a random order
+scale: pixels per mm
+showNavWindow: whether to show the navigation window. Default true
+showNavButtons: whether to show the navigation buttons. Default true
+showCoords: whether to show live screen coordinates. Default false
+showContrastControl: whether to show contrast control: false, true or global. Default false.
+showGammaControl: whether to show gamma control: false, true or global. Default false.
+showMinMaxControl: whether to show min max control: Default false.
+showOpacityControl: whether to show opacity control: false, true or global. Default false. 
+showBlendingBar: whether to show the blending bar: false, true or global. Default false. 
+showContrastControl: whether to show contrast control: false, true or global. Default false.
+showLayerSwitch: whether to show layer switcher: Default false.
+enableShading: whether to use dynamical shading filter: Default false.
+protocol: iip (default), zoomify or deepzoom
+enableFullscreen: allow full screen mode. Default true
+viewport: object containing x, y, resolution, rotation of initial view
+winResize: whether view is reflowed on window resize. Default true
+preload: load extra surrounding tiles
 
-   Note: Requires mootools version 1.4 or later <http://www.mootools.net>
-       : The page MUST have a standard-compliant HTML declaration at the beginning
+Note: Requires mootools version 1.4 or later <http://www.mootools.net>
+: The page MUST have a standard-compliant HTML declaration at the beginning
 
 */
 
 
 
 /* Main IIPMooViewer Class
- */
+*/
 var IIPMooViewer = new Class({
 
   Extends: Events,
@@ -78,7 +79,7 @@ var IIPMooViewer = new Class({
 
 
   /* Constructor - see documentation for options
-   */
+*/
   initialize: function( main_id, options ) {
 
     this.source = main_id || alert( 'No element ID given to IIPMooViewer constructor' );
@@ -87,16 +88,25 @@ var IIPMooViewer = new Class({
 
     this.render = options.render || 'spiral';
 
-    // Set the initial zoom resolution and viewport
+    // Set the initial zoom resolution and viewport - if it's not been set manually, check for a hash tag
     this.viewport = null;
     if( options.viewport ){
       this.viewport = {
-	resolution: (typeof(options.viewport.resolution)=='undefined') ? null : parseInt(options.viewport.resolution),
-	rotation: (typeof(options.viewport.rotation)=='undefined') ? null : parseInt(options.viewport.rotation),
-	contrast: (typeof(options.viewport.contrast)=='undefined') ? null : parseFloat(options.viewport.contrast),
-	//gamma: (typeof(options.viewport.gamma)=='undefined') ? null : parseInt(options.viewport.gamma),
-	x: (typeof(options.viewport.x)=='undefined') ? null : parseFloat(options.viewport.x),
-	y: (typeof(options.viewport.y)=='undefined') ? null : parseFloat(options.viewport.y)
+resolution: ('resolution' in options.viewport) ? parseInt(options.viewport.resolution) : null,
+rotation: ('rotation' in options.viewport) ? parseInt(options.viewport.rotation) : null,
+contrast: ('contrast' in options.viewport) ? parseFloat(options.viewport.contrast) : null,
+x: ('x' in options.viewport) ? parseFloat(options.viewport.x) : null,
+y: ('y' in options.viewport) ? parseFloat(options.viewport.y) : null
+      }
+    }
+    else if( window.location.hash.length > 0 ){
+      // Accept hash tags of the form ratio x, ratio y, resolution
+      // For example http://your.server/iipmooviewer/test.html#0.4,0.6,5
+      var params = window.location.hash.split('#')[1].split(',');
+      this.viewport = {
+x: parseFloat(params[0]),
+y: parseFloat(params[1]),
+resolution: parseInt(params[2])
       }
     }
 
@@ -104,27 +114,28 @@ var IIPMooViewer = new Class({
     options.image || alert( 'Image location not set in class constructor options');
     if( typeOf(options.image) == 'array' ){
        for( i=0; i<options.image.length;i++ ){
-	 this.images[i] = { src:options.image[i], sds:"0,90",
+this.images[i] = { src:options.image[i], sds:"0,90",
               cnt:(this.viewport&&this.viewport.contrast!=null)? this.viewport.contrast : 1.0,
-              gamma:(this.viewport&&this.viewport.gamma!=null)? this.viewport.gamma : 0.45,
+              gam:(this.viewport&&this.viewport.gam!=null)? this.viewport.gam : 0.45,
               opacity:(options.image[i].opacity!=null)? options.image[i].opacity : 0.0,
               color:(options.image[i].color!=null)? options.image[i].color : [1, 1, 1],
-              label:(options.image[i].label!=null)? options.image[i].label : options.image[i]};
+              shade: options.image[i].shade };
        }
        this.images[0].opacity = 1;
     }
     else this.images = [{ src:options.image, sds:"0,90",
               cnt:(this.viewport&&this.viewport.contrast!=null)? this.viewport.contrast : 1.0,
-              gamma:(this.viewport&&this.viewport.gamma!=null)? this.viewport.gamma : 0.45,
+              gam:(this.viewport&&this.viewport.gam!=null)? this.viewport.gam : 0.45,
               opacity:(options.image.opacity!=null)? options.image.opacity : 1.0,
               color:(options.image.color!=null)? options.image.color : [1, 1, 1],
-              label:(options.image.label!=null)? options.image.label : options.image } ];
+              shade: options.image.shade} ];
 
     this.loadoptions = options.load || null;
 
     this.credit = options.credit || null;
 
     this.scale = ((typeof(Scale)==="function")&&options.scale) ? new Scale(options.scale,options.units) : null;
+
 
     // Enable fullscreen mode? If false, then disable. Otherwise option can be "native" for HTML5
     // fullscreen API mode or "page" for standard web page fill page mode
@@ -134,11 +145,11 @@ var IIPMooViewer = new Class({
     this.fullscreen = null;
     if( this.enableFullscreen != false ){
       this.fullscreen = {
-	isFullscreen: false,
-	targetsize: {},
-	eventChangeName: null,
-	enter: null,
-	exit: null
+isFullscreen: false,
+targetsize: {},
+eventChangeName: null,
+enter: null,
+exit: null
       }
     }
 
@@ -148,28 +159,42 @@ var IIPMooViewer = new Class({
 
     this.prefix = options.prefix || 'images/';
 
+
     // Navigation window options
     this.navigation = null;
     if( (typeof(Navigation)==="function") ){
       this.navigation = new Navigation({ showNavWindow:options.showNavWindow,
-					 showNavButtons: options.showNavButtons,
-					 navWinSize: options.navWinSize,
-				         showCoords: options.showCoords,
-					 prefix: this.prefix
-				       });
+showNavButtons: options.showNavButtons,
+navWinSize: options.navWinSize,
+showCoords: options.showCoords,
+prefix: this.prefix
+});
     }
 
     // Show contrast controls
     this.showContrastControl = options.showContrastControl || false;
+    for( var i=0; i<this.images.length;i++ )
+      this.images[i].ccontrol = this.showContrastControl;
 
     // Show opacity controls
     this.showOpacityControl = options.showOpacityControl || false;
+    for( var i=0; i<this.images.length;i++ )
+      this.images[i].ocontrol = this.showOpacityControl;
 
     // Show gamma controls
     this.showGammaControl = options.showGammaControl || false;
+    for( var i=0; i<this.images.length;i++ )
+      this.images[i].gcontrol = this.showGammaControl;
 
     // Show min max controls
     this.showMinMaxControl = (options.showMinMaxControl == true) ? true : false;
+    for( var i=0; i<this.images.length;i++ )
+      this.images[i].mmcontrol = this.showMinMaxControl;
+
+    // Enable shading controls
+    this.enableShading = (options.enableShading == true) ? true : false;
+    for( var i=0; i<this.images.length;i++ )
+      this.images[i].shcontrol = this.enableShading;
 
     // Show the blending bar
     this.showBlendingBar = (options.showBlendingBar == true) ? true : false;
@@ -177,21 +202,23 @@ var IIPMooViewer = new Class({
     // Show Layer switch
     this.showLayerSwitch = (options.showLayerSwitch == true) ? true : false;
 
+
     this.winResize = (options.winResize==false)? false : true;
+
 
     // Set up our protocol handler
     switch( options.protocol ){
       case 'zoomify':
-	this.protocol = new Protocols.Zoomify();
-	break;
+this.protocol = new Protocols.Zoomify();
+break;
       case 'deepzoom':
-	this.protocol = new Protocols.DeepZoom();
-	break;
+this.protocol = new Protocols.DeepZoom();
+break;
       case 'djatoka':
         this.protocol = new Protocols.Djatoka();
-	break;
+break;
       default:
-	this.protocol = new Protocols.IIP();
+this.protocol = new Protocols.IIP();
     }
 
 
@@ -208,28 +235,28 @@ var IIPMooViewer = new Class({
     // - used for multispectral curve visualization, for example
     this.click = options.click || null;
 
-    this.max_size = {};      // Dimensions of largest resolution
+    this.max_size = {}; // Dimensions of largest resolution
     this.opacity = 0;
-    this.wid = 0;             // Width of current resolution
-    this.hei = 0;             // Height of current resolution
-    this.resolutions;         // List of available resolutions
+    this.wid = 0; // Width of current resolution
+    this.hei = 0; // Height of current resolution
+    this.resolutions; // List of available resolutions
     this.num_resolutions = 0; // Number of available resolutions
     this.view = {
-      x: 0,                   // Location and dimensions of current visible view
+      x: 0, // Location and dimensions of current visible view
       y: 0,
       w: this.wid,
       h: this.hei,
-      res: 0,                 // Current resolution
-      rotation: 0          // Current rotational orientation
+      res: 0, // Current resolution
+      rotation: 0 // Current rotational orientation
     };
 
-    this.tileSize = {};       // Tile size in pixels {w,h}
+    this.tileSize = {}; // Tile size in pixels {w,h}
 
 
     // Number of tiles loaded
     this.tiles = new Array(); // List of tiles currently displayed
-    this.nTilesLoaded = 0;    // Number of tiles loaded
-    this.nTilesToLoad = 0;    // Number of tiles left to load
+    this.nTilesLoaded = 0; // Number of tiles loaded
+    this.nTilesToLoad = 0; // Number of tiles left to load
 
 
     // CSS3: Need to prefix depending on browser. Cannot handle IE<9
@@ -237,7 +264,7 @@ var IIPMooViewer = new Class({
     if( Browser.firefox ) this.CSSprefix = '-moz-';
     else if( Browser.chrome || Browser.safari || Browser.Platform.ios ) this.CSSprefix = '-webkit-';
     else if( Browser.opera ) this.CSSprefix = '-o-';
-    else if( Browser.ie ) this.CSSprefix = 'ms-';  // Note that there should be no leading "-" !!
+    else if( Browser.ie ) this.CSSprefix = 'ms-'; // Note that there should be no leading "-" !!
 
 
     // Load us up when the DOM is fully loaded!
@@ -247,7 +274,7 @@ var IIPMooViewer = new Class({
 
 
   /* Create the appropriate CGI strings and change the image sources
-   */
+*/
   requestImages: function() {
 
     // Set our cursor
@@ -257,7 +284,16 @@ var IIPMooViewer = new Class({
     if( this.annotations ) this.destroyAnnotations();
 
     // Set our rotation origin - calculate differently if canvas is smaller than view port
+    
     if( !Browser.buggy ){
+      var view = this.getView();
+      var wid = this.wid;
+      var hei = this.hei;
+      // Adjust width and height if we have a 90 or -90 rotation
+      if( Math.abs(this.view.rotation % 180) == 90 ){
+wid = this.hei;
+hei = this.wid;
+      }
       var origin_x = ( this.wid>this.view.w ? Math.round(this.view.x+this.view.w/2) : Math.round(this.wid/2) ) + "px";
       var origin_y = ( this.hei>this.view.h ? Math.round(this.view.y+this.view.h/2) : Math.round(this.hei/2) ) + "px";
       var origin = origin_x + " " + origin_y;
@@ -277,27 +313,29 @@ var IIPMooViewer = new Class({
 
 
   /* Create a grid of tiles with the appropriate tile request and positioning
-   */
+*/
   loadGrid: function(){
 
-    var border = this.preload ? 1 : 0
+    var border = this.preload ? 1 : 0;
+    var view = this.getView();
+
 
     // Get the start points for our tiles
-    var startx = Math.floor( this.view.x / this.tileSize.w ) - border;
-    var starty = Math.floor( this.view.y / this.tileSize.h ) - border;
+    var startx = Math.floor( view.x / this.tileSize.w ) - border;
+    var starty = Math.floor( view.y / this.tileSize.h ) - border;
     if( startx<0 ) startx = 0;
     if( starty<0 ) starty = 0;
 
 
     // If our size is smaller than the display window, only get these tiles!
-    var len = this.view.w;
-    if( this.wid < this.view.w ) len = this.wid;
-    var endx =  Math.ceil( ((len + this.view.x)/this.tileSize.w) - 1 ) + border;
+    var len = view.w;
+    if( this.wid < view.w ) len = this.wid;
+    var endx = Math.ceil( ((len + view.x)/this.tileSize.w) - 1 ) + border;
 
 
-    len = this.view.h;
-    if( this.hei < this.view.h ) len = this.hei;
-    var endy = Math.ceil( ( (len + this.view.y)/this.tileSize.h) - 1 ) + border;
+    len = view.h;
+    if( this.hei < view.h ) len = this.hei;
+    var endy = Math.ceil( ( (len + view.y)/this.tileSize.h) - 1 ) + border;
 
 
     // Number of tiles is dependent on view width and height
@@ -309,13 +347,13 @@ var IIPMooViewer = new Class({
 
 
     /* Calculate the offset from the tile top left that we want to display.
-       Also Center the image if our viewable image is smaller than the window
-    */
-    var xoffset = Math.floor(this.view.x % this.tileSize.w);
-    if( this.wid < this.view.w ) xoffset -=  (this.view.w - this.wid)/2;
+Also Center the image if our viewable image is smaller than the window
+*/
+    var xoffset = Math.floor(view.x % this.tileSize.w);
+    if( this.wid < view.w ) xoffset -= (view.w - this.wid)/2;
 
-    var yoffset = Math.floor(this.view.y % this.tileSize.h);
-    if( this.hei < this.view.h ) yoffset -= (this.view.h - this.hei)/2;
+    var yoffset = Math.floor(view.y % this.tileSize.h);
+    if( this.hei < view.h ) yoffset -= (view.h - this.hei)/2;
 
     var tile;
     var i, j, k, n;
@@ -335,20 +373,20 @@ var IIPMooViewer = new Class({
     for( j=starty; j<=endy; j++ ){
       for (i=startx;i<=endx; i++) {
 
-	map[ntiles] = {};
-	if( this.render == 'spiral' ){
-	  // Calculate the distance from the centre of the image
-	  map[ntiles].n = Math.abs(centery-j)* Math.abs(centery-j) + Math.abs(centerx-i)*Math.abs(centerx-i);
-	}
-	// Otherwise do a random rendering
-	else map[ntiles].n = Math.random();
+map[ntiles] = {};
+if( this.render == 'spiral' ){
+// Calculate the distance from the centre of the image
+map[ntiles].n = Math.abs(centery-j)* Math.abs(centery-j) + Math.abs(centerx-i)*Math.abs(centerx-i);
+}
+// Otherwise do a random rendering
+else map[ntiles].n = Math.random();
 
-	map[ntiles].x = i;
-	map[ntiles].y = j;
-	ntiles++;
+map[ntiles].x = i;
+map[ntiles].y = j;
+ntiles++;
 
-	k = i + (j*xtiles);
-	newTiles.push(k);
+k = i + (j*xtiles);
+newTiles.push(k);
 
       }
     }
@@ -363,7 +401,7 @@ var IIPMooViewer = new Class({
       var index = parseInt(el.retrieve('tile'));
       //if( !newTiles.contains(index) ){
         el.destroy();
-	_this.tiles.erase(index);
+_this.tiles.erase(index);
       //}
     });
 
@@ -377,14 +415,12 @@ var IIPMooViewer = new Class({
       // Sequential index of the tile in the tif image
       k = i + (j*xtiles);
 
-/*
-      if( this.tiles.contains(k) ){
-	this.nTilesLoaded += this.images.length;
+      /*if( this.tiles.contains(k) ){
+this.nTilesLoaded += this.images.length;
         if( this.navigation ) this.navigation.refreshLoadBar(this.nTilesLoaded,this.nTilesToLoad);
-	if( this.nTilesLoaded >= this.nTilesToLoad ) this.canvas.setStyle( 'cursor', null );
-	continue;
-      }
-*/
+if( this.nTilesLoaded >= this.nTilesToLoad ) this.canvas.setStyle( 'cursor', null );
+continue;
+      }*/
 
       // Iterate over the number of layers we have
       var n;
@@ -393,20 +429,22 @@ var IIPMooViewer = new Class({
         var tile = new Element('img', {
           'class': 'layer'+n+' hidden',
           'styles': {
-	    left: i*this.tileSize.w,
-	    top: j*this.tileSize.h,
+            left: i*this.tileSize.w,
+            top: j*this.tileSize.h,
             opacity: this.images[n].opacity,
           }
         });
-	// Move this out of the main constructor to avoid DOM attribute bloat
-	if( this.effects ) tile.setStyle('opacity',0.1);
+// Move this out of the main constructor to avoid DOM attribute bloat
+if( this.effects ) tile.setStyle('opacity',0.1);
 
-	// Inject into our canvas
-	tile.inject(this.canvas);
+// Inject into our canvas
+tile.inject(this.canvas);
 
 	// Get tile URL from our protocol object
-//temporary
-var minmin = ''; var maxmax = '';
+        //temporary
+        var minmin = ''; var maxmax = '';
+        if (this.images[n].minarray) minmin = this.images[n].minarray[0];
+        if (this.images[n].maxarray) maxmax = this.images[n].maxarray[0];
 	var src = this.protocol.getTileURL({
 	  server: this.server,
 	  image:this.images[n].src,
@@ -415,6 +453,7 @@ var minmin = ''; var maxmax = '';
           contrast: (this.images[n].cnt||null),
 	  gamma: (this.images[n].gam||null),
 	  cmp: (this.images[n].cmp||null),
+	  shade: (this.images[n].shade||null),
           mincut: minmin,
           maxcut: maxmax,
           tileindex: k,
@@ -422,32 +461,32 @@ var minmin = ''; var maxmax = '';
           y: j
 	});
 
-	// Add our tile event functions after injection otherwise we get no event
-	tile.addEvents({
-	  'load': function(tile,id){
-	     if( this.effects ) tile.setStyle('opacity',1);
-	     tile.removeClass('hidden');
-	     if(!(tile.width&&tile.height)){
-	       tile.fireEvent('error');
-	       return;
-	     }
-	     this.nTilesLoaded++;
-	     if( this.navigation ) this.navigation.refreshLoadBar( this.nTilesLoaded, this.nTilesToLoad );
-	     if( this.nTilesLoaded >= this.nTilesToLoad ) this.canvas.setStyle( 'cursor', null );
-	     this.tiles.push(id); // Add to our list of loaded tiles
-	  }.bind(this,tile,k),
-	  'error': function(){
-	     // Try to reload if we have an error.
-	     // Add a suffix to prevent caching, but remove error event to avoid endless loops
-	     this.removeEvents('error');
-	     var src = this.src;
-	     this.set( 'src', src + '?'+ Date.now() );
-	  }
-	});
+// Add our tile event functions after injection otherwise we get no event
+tile.addEvents({
+'load': function(tile,id){
+if( this.effects ) tile.setStyle('opacity',1);
+tile.removeClass('hidden');
+if(!(tile.width&&tile.height)){
+tile.fireEvent('error');
+return;
+}
+this.nTilesLoaded++;
+if( this.navigation ) this.navigation.refreshLoadBar( this.nTilesLoaded, this.nTilesToLoad );
+if( this.nTilesLoaded >= this.nTilesToLoad ) this.canvas.setStyle( 'cursor', null );
+this.tiles.push(id); // Add to our list of loaded tiles
+}.bind(this,tile,k),
+'error': function(){
+// Try to reload if we have an error.
+// Add a suffix to prevent caching, but remove error event to avoid endless loops
+this.removeEvents('error');
+var src = this.src;
+this.set( 'src', src + '?'+ Date.now() );
+}
+});
 
-	// We must set the source at the end so that the 'load' function is properly fired
-	tile.set( 'src', src );
-	tile.store('tile',k);
+// We must set the source at the end so that the 'load' function is properly fired
+tile.set( 'src', src );
+tile.store('tile',k);
       }
 
     }
@@ -461,7 +500,7 @@ var minmin = ''; var maxmax = '';
 
 
   /* Get a URL for a screenshot of the current view region
-   */
+*/
   getRegionURL: function(){
     var w = this.resolutions[this.view.res].w;
     var h = this.resolutions[this.view.res].h;
@@ -472,7 +511,7 @@ var minmin = ''; var maxmax = '';
 
 
   /* Handle various keyboard events such as allowing us to navigate within the image via the arrow keys etc.
-   */
+*/
   key: function(e){
 
     var event = new DOMEvent(e);
@@ -482,66 +521,51 @@ var minmin = ''; var maxmax = '';
     switch( e.code ){
     case 37: // left
       this.nudge(-d,0);
-      if( IIPMooViewer.sync ){
-	IIPMooViewer.windows(this).each( function(el){ el.nudge(-d,0); });
-      }
+      if( IIPMooViewer.sync ) IIPMooViewer.windows(this).invoke( 'nudge', -d, 0 );
       event.preventDefault(); // Prevent default only for navigational keys
       break;
     case 38: // up
       this.nudge(0,-d);
-      if( IIPMooViewer.sync ){
-	IIPMooViewer.windows(this).each( function(el){ el.nudge(0,-d); });
-      }
+      if( IIPMooViewer.sync ) IIPMooViewer.windows(this).invoke( 'nudge', 0, -d );
       event.preventDefault();
       break;
     case 39: // right
       this.nudge(d,0);
-      if( IIPMooViewer.sync ){
-	IIPMooViewer.windows(this).each( function(el){ el.nudge(d,0); });
-      }
+      if( IIPMooViewer.sync ) IIPMooViewer.windows(this).invoke( 'nudge', d, 0 );
       event.preventDefault();
       break;
     case 40: // down
       this.nudge(0,d);
-      if( IIPMooViewer.sync ){
-	IIPMooViewer.windows(this).each( function(el){ el.nudge(0,d); });
-      }
+      if( IIPMooViewer.sync ) IIPMooViewer.windows(this).invoke( 'nudge', 0, d );
       event.preventDefault();
       break;
     case 107: // plus
       if(!e.control){
-	this.zoomIn();
-	if( IIPMooViewer.sync ){
-	  IIPMooViewer.windows(this).each( function(el){ el.zoomIn(); });
-	}
-	event.preventDefault();
+this.zoomIn();
+if( IIPMooViewer.sync ) IIPMooViewer.windows(this).invoke('zoomIn');
+event.preventDefault();
       }
       break;
     case 109: // minus
-      if(!e.control){
-	this.zoomOut();
-	if( IIPMooViewer.sync ){
-	  IIPMooViewer.windows(this).each( function(el){ el.zoomOut(); });
-	}
-      }
-      break;
     case 189: // minus
-      if(!e.control) this.zoomOut();
+      if(!e.control){
+this.zoomOut();
+if( IIPMooViewer.sync ) IIPMooViewer.windows(this).invoke('zoomOut');
+event.preventDefault();
+      }
       break;
     case 72: // h
       if( this.navigation ) this.navigation.toggleWindow();
-      this.toggleControlWindow();
+      if( this.credit ) this.container.getElement('div.credit').get('reveal').toggle();
       break;
     case 82: // r
       if(!e.control){
-	var r = this.view.rotation;
-	if(e.shift) r -= 90 % 360;
-	else r += 90 % 360;
+var r = this.view.rotation;
+if(e.shift) r -= 90 % 360;
+else r += 90 % 360;
 
-	this.rotate( r );
-	if( IIPMooViewer.sync ){
-	  IIPMooViewer.windows(this).each( function(el){ el.rotate(r); });
-	}
+this.rotate( r );
+if( IIPMooViewer.sync ) IIPMooViewer.windows(this).invoke( 'rotate', r );
       }
       break;
     case 65: // a
@@ -555,9 +579,10 @@ var minmin = ''; var maxmax = '';
       if(!IIPMooViewer.sync) this.toggleFullScreen();
       break;
     case 67: // For control-c, show our current view location
-      if(e.control) prompt( "URL of current view:", window.location.href + '#' + this.view.res + ',' +
-			   (this.view.x+this.view.w/2)/this.wid + ',' +
-			   (this.view.y+this.view.h/2)/this.hei );
+      if(e.control) prompt( "URL of current view:", window.location.href.split("#")[0] + '#' +
+(this.view.x+this.view.w/2)/this.wid + ',' +
+(this.view.y+this.view.h/2)/this.hei + ',' +
+this.view.res );
       break;
     default:
       break;
@@ -567,7 +592,7 @@ var minmin = ''; var maxmax = '';
 
 
   /* Rotate our view
-   */
+*/
   rotate: function( r ){
 
     // Rotation works in Firefox 3.5+, Chrome, Safari and IE9+
@@ -576,11 +601,16 @@ var minmin = ''; var maxmax = '';
     this.view.rotation = r;
     var angle = 'rotate(' + r + 'deg)';
     this.canvas.setStyle( this.CSSprefix+'transform', angle );
+
+    this.constrain();
+    this.requestImages();
+    this.updateNavigation();
+
   },
 
 
   /* Toggle fullscreen
-   */
+*/
   toggleFullScreen: function(){
     var l,t,w,h;
 
@@ -589,9 +619,9 @@ var minmin = ''; var maxmax = '';
     if( !this.fullscreen.isFullscreen ){
       // Note our size, location and positioning
       this.fullscreen.targetsize = {
-	pos: {x: this.container.style.left, y: this.container.style.top },
-	size: {x: this.container.style.width, y: this.container.style.height },
-	position: this.container.style.position
+pos: {x: this.container.style.left, y: this.container.style.top },
+size: {x: this.container.style.width, y: this.container.style.height },
+position: this.container.style.position
       };
       l = 0;
       t = 0;
@@ -613,11 +643,11 @@ var minmin = ''; var maxmax = '';
 
     if( !this.fullscreen.enter ){
       this.container.setStyles({
-	left: l,
-	top: t,
-	width: w,
-	height: h,
-	position: p
+left: l,
+top: t,
+width: w,
+height: h,
+position: p
       });
       this.fullscreen.isFullscreen = !this.fullscreen.isFullscreen;
       // Create a fullscreen message, then delete after a timeout
@@ -630,7 +660,7 @@ var minmin = ''; var maxmax = '';
 
 
   /* Show a message, then delete after a timeout
-   */
+*/
   showPopUp: function( text ) {
     var fs = new Element('div',{
       'class': 'message',
@@ -644,7 +674,7 @@ var minmin = ''; var maxmax = '';
 
 
   /* Scroll resulting from a drag of the navigation window
-   */
+*/
   scrollNavigation: function( e ) {
 
     // Cancel any running morphs on the canvas
@@ -653,58 +683,94 @@ var minmin = ''; var maxmax = '';
     var xmove = Math.round(e.x * this.wid);
     var ymove = Math.round(e.y * this.hei);
 
+    this.view.x = xmove;
+    this.view.y = ymove;
+
     // Only morph transition if we have moved a short distance and our rotation is zero
     var morphable = Math.abs(xmove-this.view.x)<this.view.w/2 && Math.abs(ymove-this.view.y)<this.view.h/2 && this.view.rotation==0;
     if( morphable ){
       this.canvas.morph({
-	left: (this.wid>this.view.w)? -xmove : Math.round((this.view.w-this.wid)/2),
-	top: (this.hei>this.view.h)? -ymove : Math.round((this.view.h-this.hei)/2)
+left: (this.wid>this.view.w)? -xmove : Math.round((this.view.w-this.wid)/2),
+top: (this.hei>this.view.h)? -ymove : Math.round((this.view.h-this.hei)/2)
       });
     }
     else{
-      this.canvas.setStyles({
-	left: (this.wid>this.view.w)? -xmove : Math.round((this.view.w-this.wid)/2),
-	top: (this.hei>this.view.h)? -ymove : Math.round((this.view.h-this.hei)/2)
-      });
-    }
-
-    this.view.x = xmove;
-    this.view.y = ymove;
-
-    // The morph event automatically calls requestImages
-    if( !morphable ){
+      this.positionCanvas();
+      // The morph event automatically calls requestImages
       this.requestImages();
     }
 
-    if(IIPMooViewer.sync){
-      IIPMooViewer.windows(this).each( function(el){ el.moveTo(xmove,ymove); });
-    }
+    if(IIPMooViewer.sync) IIPMooViewer.windows(this).invoke( 'moveTo', xmove, ymove );
+
   },
 
 
 
   /* Scroll from a drag event on the tile canvas
-   */
+*/
   scroll: function(e) {
 
     var pos = {};
+
     // Use style values directly as getPosition will take into account rotation
     pos.x = this.canvas.getStyle('left').toInt();
     pos.y = this.canvas.getStyle('top').toInt();
-    var xmove =  -pos.x;
-    var ymove =  -pos.y;
+
+    var xmove = -pos.x;
+    var ymove = -pos.y;
+
+    // Adjust for rotated views. First make sure we have a positive value 0-360
+    var rotation = this.view.rotation % 360;
+    if( rotation < 0 ) rotation += 360;
+
+    if( rotation == 90 ){
+      xmove = this.view.x - (this.view.y + pos.y);
+      ymove = this.view.y + (this.view.x + pos.x);
+    }
+    else if( rotation == 180 ){
+      xmove = this.view.x + (this.view.x + pos.x);
+      ymove = this.view.y + (this.view.y + pos.y);
+    }
+    else if( rotation == 270 ){
+      xmove = this.view.x + (this.view.y + pos.y);
+      ymove = this.view.y - (this.view.x + pos.x);
+    }
+
+    // Need to do the moveTo rather than just requestImages() to avoid problems with rotated views
     this.moveTo( xmove, ymove );
 
-    if( IIPMooViewer.sync ){
-      IIPMooViewer.windows(this).each( function(el){ el.moveTo(xmove,ymove); });
-    }
+    if( IIPMooViewer.sync ) IIPMooViewer.windows(this).invoke( 'moveTo', xmove, ymove );
 
   },
 
 
 
+  /* Get view taking into account rotations
+*/
+  getView: function() {
+
+    var x = this.view.x;
+    var y = this.view.y;
+    var w = this.view.w;
+    var h = this.view.h;
+
+    // Correct for 90,270 ... rotation
+    if( Math.abs(this.view.rotation%180) == 90 ){
+      x = Math.round( this.view.x + this.view.w/2 - this.view.h/2 );
+      y = Math.round( this.view.y + this.view.h/2 - this.view.w/2 );
+      if( x<0 ) x = 0; // Make sure we don't have -ve values
+      if( y<0 ) y = 0;
+      w = this.view.h;
+      h = this.view.w;
+    }
+
+    return { x: x, y: y, w: w, h: h };
+  },
+
+
+
   /* Check our scroll bounds.
-   */
+*/
   checkBounds: function( x, y ) {
 
     if( x > this.wid-this.view.w ) x = this.wid - this.view.w;
@@ -720,43 +786,69 @@ var minmin = ''; var maxmax = '';
 
 
   /* Move to a particular position on the image
-   */
+*/
   moveTo: function( x, y ){
 
     // To avoid unnecessary redrawing ...
     if( x==this.view.x && y==this.view.y ) return;
 
     this.checkBounds(x,y);
-    this.canvas.setStyles({
-      left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
-      top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
-    });
-
+    this.positionCanvas();
     this.requestImages();
-    if( this.navigation ) this.navigation.update(this.view.x/this.wid,this.view.y/this.hei,this.view.w/this.wid,this.view.h/this.hei);
+    this.updateNavigation();
+  },
+
+
+
+  /* Move to and center at a particular point
+*/
+  centerTo: function( x, y ){
+    this.moveTo( Math.round(x*this.wid-(this.view.w/2)), Math.round(y*this.hei-(this.view.h/2)) );
   },
 
 
 
   /* Nudge the view by a small amount
-   */
+*/
   nudge: function( dx, dy ){
 
-    this.checkBounds(this.view.x+dx,this.view.y+dy);
+    var rdx = dx;
+    var rdy = dy;
 
-    // Check whether image size is less than viewport
-    this.canvas.morph({
-      left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
-      top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
-    });
+    // Adjust for rotated views. First make sure we have a positive value 0-360
+    var rotation = this.view.rotation % 360;
+    if( rotation < 0 ) rotation += 360;
 
-    if( this.navigation ) this.navigation.update(this.view.x/this.wid,this.view.y/this.hei,this.view.w/this.wid,this.view.h/this.hei);
+    if( rotation == 90 ){
+      rdy = -dx;
+      rdx = dy;
+    }
+    else if( rotation == 180 ){
+      rdx = -dx;
+      rdy = -dy;
+    }
+    else if( rotation == 270 ){
+      rdx = -dy;
+      rdy = dx;
+    }
+
+    // Morph is buggy for rotated images, so only use for no rotation
+    if( rotation == 0 ){
+      this.checkBounds(this.view.x+rdx,this.view.y+rdy);
+      this.canvas.morph({
+        left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
+        top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
+      });
+    }
+    else this.moveTo( this.view.x+rdx, this.view.y+rdy );
+
+    this.updateNavigation();
   },
 
 
 
   /* Generic zoom function for mouse wheel or click events
-   */
+*/
   zoom: function( e ) {
 
     var event = new DOMEvent(e);
@@ -782,27 +874,34 @@ var minmin = ''; var maxmax = '';
       var cc = event.target.get('class');
 
       if( cc != "zone" & cc != 'navimage' ){
-	pos = this.canvas.getPosition();
+// Get position, but we need to use our canvas style values directly as getPosition()
+// mis-calculates for rotated images
+var cpos = this.containerPosition;
+pos = {
+x: this.canvas.style.left.toInt() + cpos.x,
+y: this.canvas.style.top.toInt() + cpos.y
+};
 
-	// Center our zooming on the mouse position when over the main target window
-	this.view.x = event.page.x - pos.x - Math.floor(this.view.w/2);
-	this.view.y = event.page.y - pos.y - Math.floor(this.view.h/2);
+// Center our zooming on the mouse position when over the main target window
+this.view.x = event.page.x - pos.x - Math.floor(this.view.w/2);
+this.view.y = event.page.y - pos.y - Math.floor(this.view.h/2);
       }
       else{
-	// For zooms with the mouse over the navigation window
-	pos = this.navigation.zone.getParent().getPosition();
-	var n_size = this.navigation.zone.getParent().getSize();
-	var z_size = this.navigation.zone.getSize();
-	this.view.x = Math.round( (event.page.x - pos.x - z_size.x/2) * this.wid/n_size.x );
-	this.view.y = Math.round( (event.page.y - pos.y - z_size.y/2) * this.hei/n_size.y );
+// For zooms with the mouse over the navigation window
+pos = this.navigation.zone.getParent().getPosition();
+var n_size = this.navigation.zone.getParent().getSize();
+var z_size = this.navigation.zone.getSize();
+this.view.x = Math.round( (event.page.x - pos.x - z_size.x/2) * this.wid/n_size.x );
+this.view.y = Math.round( (event.page.y - pos.y - z_size.y/2) * this.hei/n_size.y );
       }
 
+      // Set the view in each synchronized window
       if( IIPMooViewer.sync ){
-	var _x = this.view.x;
-	var _y = this.view.y;
-	IIPMooViewer.windows(this).each( function(el){
-	  el.view.x = _x;
-	  el.view.y = _y;
+var _x = this.view.x;
+var _y = this.view.y;
+IIPMooViewer.windows(this).each( function(el){
+el.view.x = _x;
+el.view.y = _y;
         });
       }
     }
@@ -812,10 +911,8 @@ var minmin = ''; var maxmax = '';
     else this.zoomIn();
 
     if( IIPMooViewer.sync ){
-      IIPMooViewer.windows(this).each( function(el){
-	if( z==-1) el.zoomOut();
-	else el.zoomIn();
-      });
+      if( z==-1 ) IIPMooViewer.windows(this).invoke('zoomOut');
+      else IIPMooViewer.windows(this).invoke('zoomIn');
     }
 
   },
@@ -823,7 +920,7 @@ var minmin = ''; var maxmax = '';
 
 
   /* Zoom in by a factor of 2
-   */
+*/
   zoomIn: function(){
     if( this.view.res < this.num_resolutions-1 ) this.zoomTo( this.view.res+1 );
   },
@@ -831,7 +928,7 @@ var minmin = ''; var maxmax = '';
 
 
   /* Zoom out by a factor of 2
-   */
+*/
   zoomOut: function(){
     if( this.view.res > 0 ) this.zoomTo( this.view.res-1 );
   },
@@ -839,7 +936,7 @@ var minmin = ''; var maxmax = '';
 
 
   /* Zoom to a particular resolution
-   */
+*/
   zoomTo: function(r){
 
     if( r == this.view.res ) return;
@@ -853,12 +950,12 @@ var minmin = ''; var maxmax = '';
       // constraining will automatically recenter when zooming out
       var xoffset, yoffset;
       if( r > this.view.res ){
-	xoffset = (this.resolutions[this.view.res].w > this.view.w) ? this.view.w*(factor-1)/2 : this.resolutions[r].w/2 - this.view.w/2;
-	yoffset = (this.resolutions[this.view.res].h > this.view.h) ? this.view.h*(factor-1)/2 : this.resolutions[r].h/2 - this.view.h/2;
+xoffset = (this.resolutions[this.view.res].w > this.view.w) ? this.view.w*(factor-1)/2 : this.resolutions[r].w/2 - this.view.w/2;
+yoffset = (this.resolutions[this.view.res].h > this.view.h) ? this.view.h*(factor-1)/2 : this.resolutions[r].h/2 - this.view.h/2;
       }
       else{
-	xoffset = -this.view.w*(1-factor)/2;
-	yoffset = -this.view.h*(1-factor)/2;;
+xoffset = -this.view.w*(1-factor)/2;
+yoffset = -this.view.h*(1-factor)/2;;
       }
 
       this.view.x = Math.round( factor*this.view.x + xoffset );
@@ -872,7 +969,7 @@ var minmin = ''; var maxmax = '';
 
 
   /* Generic zoom function
-   */
+*/
   _zoom: function(){
 
     // Get the image size for this resolution
@@ -885,9 +982,8 @@ var minmin = ''; var maxmax = '';
     if( this.view.y + this.view.h > this.hei ) this.view.y = this.hei - this.view.h;
     if( this.view.y < 0 ) this.view.y = 0;
 
+    this.positionCanvas();
     this.canvas.setStyles({
-      left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
-      top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2),
       width: this.wid,
       height: this.hei
     });
@@ -901,17 +997,17 @@ var minmin = ''; var maxmax = '';
     this.tiles.empty();
 
     this.requestImages();
-    if( this.navigation ){
-      this.navigation.update(this.view.x/this.wid,this.view.y/this.hei,this.view.w/this.wid,this.view.h/this.hei);
-      this.navigation.setCoords('');
-    }
+
+    this.updateNavigation();
+    if( this.navigation ) this.navigation.setCoords('');
+
     if( this.scale ) this.scale.update( this.wid/this.max_size.w, this.view.w );
 
   },
 
 
   /* Calculate navigation view size
-   */
+*/
   calculateNavSize: function(){
 
     var thumb_width = Math.round(this.view.w * this.navigation.options.navWinSize);
@@ -930,7 +1026,7 @@ var minmin = ''; var maxmax = '';
 
 
   /* Calculate some dimensions
-   */
+*/
   calculateSizes: function(){
 
     // Set up our default sizes
@@ -970,18 +1066,20 @@ var minmin = ''; var maxmax = '';
     this.wid = this.resolutions[this.view.res].w;
     this.hei = this.resolutions[this.view.res].h;
 
+    if( this.scale ) this.scale.calculateDefault(this.max_size.w);
+
   },
 
 
   /* Update the message in the credit div
-   */
+*/
   setCredit: function(message){
     this.container.getElement('div.credit').set( 'html', message );
   },
 
 
   /* Create our main and navigation windows
-   */
+*/
   createWindows: function(){
 
     // Setup our class
@@ -997,7 +1095,7 @@ var minmin = ''; var maxmax = '';
 
       if( document.documentElement.requestFullscreen ){
         this.fullscreen.eventChangeName = 'fullscreenchange';
-        this.enter =  this.container.requestFullscreen;
+        this.enter = this.container.requestFullscreen;
         this.exit = document.documentElement.cancelFullScreen;
       }
       else if( document.mozCancelFullScreen ){
@@ -1012,17 +1110,17 @@ var minmin = ''; var maxmax = '';
       }
 
       if( this.fullscreen.enter ){
-	// Monitor Fullscreen change events
-	document.addEvent( this.fullscreen.eventChangeName, function(){
-			     _this.fullscreen.isFullscreen = !_this.fullscreen.isFullscreen;
-			     _this.reload();
-			   });
+// Monitor Fullscreen change events
+document.addEvent( this.fullscreen.eventChangeName, function(){
+_this.fullscreen.isFullscreen = !_this.fullscreen.isFullscreen;
+_this.reload();
+});
       }
       else{
-	// Disable fullscreen mode if we are already at 100% size and we don't have real Fullscreen
-	if( this.container.getStyle('width') == '100%' && this.container.getStyle('height') == '100%' ){
-	  this.enableFullscreen = false;
-	}
+// Disable fullscreen mode if we are already at 100% size and we don't have real Fullscreen
+if( this.container.getStyle('width') == '100%' && this.container.getStyle('height') == '100%' ){
+this.enableFullscreen = false;
+}
       }
     }
 
@@ -1032,37 +1130,44 @@ var minmin = ''; var maxmax = '';
       'class': 'info',
       'styles': { opacity: 0 },
       'events': {
-	click: function(){ this.fade('out'); }
+click: function(){ this.fade('out'); }
       },
       'html': '<div><div><h2><a href="http://iipimage.sourceforge.net"><img src="'+this.prefix+'iip.32x32.png"/></a>IIPMooViewer</h2>IIPImage HTML5 Ajax High Resolution Image Viewer - Version '+this.version+'<br/><ul><li>'+IIPMooViewer.lang.navigate+'</li><li>'+IIPMooViewer.lang.zoomIn+'</li><li>'+IIPMooViewer.lang.zoomOut+'</li><li>'+IIPMooViewer.lang.rotate+'</li><li>'+IIPMooViewer.lang.fullscreen+'<li>'+IIPMooViewer.lang.annotations+'</li><li>'+IIPMooViewer.lang.navigation+'</li></ul><br/>'+IIPMooViewer.lang.more+' <a href="http://iipimage.sourceforge.net">http://iipimage.sourceforge.net</a></div></div>'
     }).inject( this.container );
 
     // Create our main window target div, add our events and inject inside the frame
     this.canvas = new Element('div', {
-      'id': 'images',
       'class': 'canvas',
       'morph': {
-	transition: Fx.Transitions.Quad.easeInOut,
-	onComplete: function(){
-	  _this.requestImages();
-	}
+transition: Fx.Transitions.Quad.easeInOut,
+onComplete: function(){
+_this.requestImages();
+}
       }
     });
 
-    // Create our main view drag object for our canvas.
-    // Add synchronization via the Drag complete hook as well as coordinate updating
-    var coordsBind = this.updateCoords.bind(this);
-    this.touch = new Drag( this.canvas, {
-      onStart: function(){
-	_this.canvas.addClass('drag');
-	_this.canvas.removeEvent('mousemove:throttle(75)',coordsBind);
-      },
-      onComplete: function(){
-	_this.scroll();
-	_this.canvas.removeClass('drag');
-	_this.canvas.addEvent('mousemove:throttle(75)',coordsBind);
-      }
-    });
+
+    // Add touch or drag events to our canvas
+    if( Browser.Platform.ios || Browser.Platform.android ){
+      // Add our touch events
+      this.addTouchEvents();
+    }
+    else{
+      // Create our main view drag object for our canvas.
+      // Add synchronization via the Drag complete hook as well as coordinate updating
+      var coordsBind = this.updateCoords.bind(this);
+      this.touch = new Drag( this.canvas, {
+onStart: function(){
+_this.canvas.addClass('drag');
+_this.canvas.removeEvent('mousemove:throttle(75)',coordsBind);
+        },
+        onComplete: function(){
+_this.scroll();
+_this.canvas.removeClass('drag');
+_this.canvas.addEvent('mousemove:throttle(75)',coordsBind);
+}
+      });
+    }
 
 
     // Inject our canvas into the container, but events need to be added after injection
@@ -1084,11 +1189,11 @@ var minmin = ''; var maxmax = '';
     // Disable the right click context menu if requested and show our info window instead
     if( this.disableContextMenu ){
       this.container.addEvent( 'contextmenu', function(e){
-					   var event = new DOMEvent(e);
-					   event.stop();
-					   _this.container.getElement('div.info').fade(0.95);
-					   return false;
-					 } )
+var event = new DOMEvent(e);
+event.stop();
+_this.container.getElement('div.info').fade(0.95);
+return false;
+} )
     }
 
 
@@ -1101,10 +1206,11 @@ var minmin = ''; var maxmax = '';
 
       // And additionally disable this during dragging
       this.touch.addEvents({
-	start: function(e){ _this.canvas.removeEvents( 'mouseup' ); },
-	complete: function(e){ _this.canvas.addEvent( 'mouseup', fn ); }
+start: function(e){ _this.canvas.removeEvents( 'mouseup' ); },
+complete: function(e){ _this.canvas.addEvent( 'mouseup', fn ); }
       });
     }
+
 
     // We want to add our keyboard events, but only when we are over the viewer div
     // Also prevent default scrolling via mousewheel
@@ -1122,26 +1228,18 @@ var minmin = ''; var maxmax = '';
       'class': 'logo',
       'title': IIPMooViewer.lang.help,
       'events': {
-	click: function(){ _this.container.getElement('div.info').fade(0.95); },
-	// Prevent user from dragging image
-	mousedown: function(e){ var event = new DOMEvent(e); event.stop(); }
+click: function(){ _this.container.getElement('div.info').fade(0.95); },
+// Prevent user from dragging image
+mousedown: function(e){ var event = new DOMEvent(e); event.stop(); }
       }
     }).inject(this.container);
 
-    // Add our touch events
-    this.addTouchEvents();
 
     // Add some information or credit
     if( this.credit ){
       new Element( 'div', {
-	'class': 'credit',
-	'html': this.credit,
-	'events': {
-	  // We specify the start value to stop a strange problem where on the first
-	  // mouseover we get a sudden transition to opacity 1.0
-	  mouseover: function(){ this.fade([0.6,0.9]); },
-	  mouseout: function(){ this.fade(0.6); }
-	}
+'class': 'credit',
+'html': this.credit
       }).inject(this.container);
     }
 
@@ -1149,37 +1247,29 @@ var minmin = ''; var maxmax = '';
     // Add a scale if requested
     if( this.scale ) this.scale.create(this.container);
 
+
     // Calculate some sizes and create the navigation window
     this.calculateSizes();
     if( this.navigation){
       this.navigation.create(this.container);
       this.navigation.setImage(this.protocol.getThumbnailURL(this.server,this.images[0].src,this.navigation.size.x));
       this.navigation.addEvents({
-	'zoomIn': function(){
-	  _this.zoomIn();
-	  if( IIPMooViewer.sync ){
-	    IIPMooViewer.windows(_this).each( function(el){ el.zoomIn(); });
-	  }
-	},
-	'zoomOut': function(){
-	  _this.zoomOut();
-	  if( IIPMooViewer.sync ){
-	    IIPMooViewer.windows(_this).each( function(el){ el.zoomOut(); });
-	  }
-	},
-	'reload': function(){
-	  _this.reload();
-	  if( IIPMooViewer.sync ){
-	    IIPMooViewer.windows(_this).each( function(el){ el.reload(); });
-	  }
-	},
-	'scroll': this.scrollNavigation.bind(this),
-	'zoom': this.zoom.bind(this)
+'zoomIn': function(){
+_this.zoomIn();
+if( IIPMooViewer.sync ) IIPMooViewer.windows(_this).invoke( 'zoomIn' );
+},
+'zoomOut': function(){
+_this.zoomOut();
+if( IIPMooViewer.sync ) IIPMooViewer.windows(_this).invoke( 'zoomOut' );
+},
+'reload': function(){
+_this.reload();
+if( IIPMooViewer.sync ) IIPMooViewer.windows(_this).invoke( 'reload' );
+},
+'scroll': this.scrollNavigation.bind(this),
+'zoom': this.zoom.bind(this)
      });
     }
-
-    // Add contrast controls if asked
-    if (this.showContrastControl) this.CreateContrastControl();
 
     // Add opacity controls if asked
     if (this.showOpacityControl) this.CreateOpacityControl();
@@ -1187,14 +1277,17 @@ var minmin = ''; var maxmax = '';
     // Add the blending bar if asked
     if (this.showBlendingBar) this.CreateBlendingBar();
 
+    // Add layer switch if asked
+    if (this.showLayerSwitch) this.CreateLayerSwitch();
+
+    // Add contrast controls if asked
+    if (this.showContrastControl) this.CreateContrastControl();
+
     // Add gamma controls if asked
     if (this.showGammaControl) this.CreateGammaControl();
 
     // Add min max controls if asked
     if (this.showMinMaxControl) this.CreateMinMaxControl();
-
-    // Add layer switch if asked
-    if (this.showLayerSwitch) this.CreateLayerSwitch();
 
     if( this.annotations ) this.createAnnotations();
 
@@ -1204,19 +1297,19 @@ var minmin = ''; var maxmax = '';
       var tip_list = 'img.logo, div.toolbar, div.scale';
       if( Browser.ie8||Browser.ie7 ) tip_list = 'img.logo, div.toolbar'; // IE8 bug which triggers window resize
       new Tips( tip_list, {
-	className: 'tip', // We need this to force the tip in front of nav window
-	  onShow: function(tip,hovered){
-	    tip.setStyles({ opacity: 0, display: 'block' }).fade(0.9);
-	  },
-	  onHide: function(tip, hovered){
-	    tip.fade('out').get('tween').chain( function(){ tip.setStyle('display', 'none'); } );
-	  }
-	});
+className: 'tip', // We need this to force the tip in front of nav window
+onShow: function(tip,hovered){
+tip.setStyles({ opacity: 0, display: 'block' }).fade(0.9);
+},
+onHide: function(tip, hovered){
+tip.fade('out').get('tween').chain( function(){ tip.setStyle('display', 'none'); } );
+}
+      });
     }
 
     // Clear invalid this.viewport.resolution values
-    if( this.viewport && typeof(this.viewport.resolution!='undefined') &&
-	typeof(this.resolutions[this.viewport.resolution])=='undefined'){
+    if( this.viewport && ('resolution' in this.viewport) &&
+typeof(this.resolutions[this.viewport.resolution])=='undefined'){
       this.viewport.resolution=null;
     }
 
@@ -1230,7 +1323,7 @@ var minmin = ''; var maxmax = '';
 
     // Center our view or move to initial viewport position
     if( this.viewport && this.viewport.x!=null && this.viewport.y!=null ){
-      this.moveTo( this.viewport.x*this.wid-(this.view.w/2), this.viewport.y*this.hei-(this.view.h/2) );
+      this.centerTo( this.viewport.x, this.viewport.y );
     }
     else this.recenter();
 
@@ -1244,7 +1337,9 @@ var minmin = ''; var maxmax = '';
 
     // Load our images
     this.requestImages();
-    if( this.navigation ) this.navigation.update(this.view.x/this.wid,this.view.y/this.hei,this.view.w/this.wid,this.view.h/this.hei);
+    this.updateNavigation();
+
+    // Update our scale
     if( this.scale ) this.scale.update( this.wid/this.max_size.w, this.view.w );
 
     // Set initial rotation
@@ -1252,36 +1347,57 @@ var minmin = ''; var maxmax = '';
       this.rotate( this.viewport.rotation );
     }
 
+    // Add a hash change event if this is supported by the browser
+    if( 'onhashchange' in window ){
+      window.addEvent( 'hashchange', function(){
+var params = window.location.hash.split('#')[1].split(',');
+_this.zoomTo( params[2] );
+_this.centerTo( params[0], params[1] );
+});
+    }
+
     // Add our key press and window resize events. Do this at the end to avoid reloading before
     // we are fully set up
     if(this.winResize) window.addEvent( 'resize', this.reflow.bind(this) );
+
+    // Record our container position
+    this.containerPosition = this.container.getPosition();
 
     this.fireEvent('load');
 
   },
 
-  /* Create function to update coordinates
-   */
+
+  /* Generic function to update coordinates
+*/
   updateCoords: function(e){
     if( !this.navigation || !this.navigation.coords ) return;
-    // Calculate scale factor for this resolution 
-    var f = this.max_size.w / this.wid;
     // Calculate position taking into account images smaller than our view
-    var x = e.page.x + this.view.x - ((this.wid<this.view.w) ? Math.round((this.view.w-this.wid)/2) : 0);
-    var y = e.page.y + this.view.y - ((this.hei<this.view.h) ? Math.round((this.view.h-this.hei)/2) : 0);
-    var text = this.transformCoords( x*f, y*f );
+    var x = e.page.x - this.containerPosition.x + this.view.x - ((this.wid<this.view.w) ? Math.round((this.view.w-this.wid)/2) : 0);
+    var y = e.page.y - this.containerPosition.y + this.view.y - ((this.hei<this.view.h) ? Math.round((this.view.h-this.hei)/2) : 0);
+    var text = this.transformCoords( x/this.wid, y/this.hei );
     this.navigation.setCoords( text );
   },
 
+
   /* Transform resolution independent coordinates to coordinate system
-   */
+*/
   transformCoords: function( x, y ){
-    return (x/this.scale.pixelscale).toFixed(2) + 'mm, ' + (y/this.scale.pixelscale).toFixed(2) + 'mm';
-   },
+    // Calculate physical position using scale value
+    if( this.scale ){
+      var text = Math.round(x*this.max_size.w/this.scale.pixelscale) +
+this.scale.units.dims[this.scale.defaultUnit] + ', ' +
+Math.round(y*this.max_size.h/this.scale.pixelscale) +
+this.scale.units.dims[this.scale.defaultUnit];
+      return text;
+    }
+    // Return raw pixel values
+    else return Math.round(x*this.wid) + 'px, ' + Math.round(y*this.hei) + 'px';
+  },
 
 
   /* Change our image and reload our view
-   */
+*/
   changeImage: function( image ){
 
     // Replace our image array
@@ -1292,22 +1408,47 @@ var minmin = ''; var maxmax = '';
       method: 'get',
       url: this.protocol.getMetaDataURL( this.server, this.images[0].src ),
       onComplete: function(transport){
-	var response = transport || alert( "Error: No response from server " + this.server );
+var response = transport || alert( "Error: No response from server " + this.server );
 
-	// Parse the result
-	var result = this.protocol.parseMetaData( response );
-	this.max_size = result.max_size;
-	this.tileSize = result.tileSize;
-	this.num_resolutions = result.num_resolutions;
+// Parse the result
+var result = this.protocol.parseMetaData( response );
+this.max_size = result.max_size;
+this.tileSize = result.tileSize;
+this.num_resolutions = result.num_resolutions;
+        this.images[0].minarray = result.minarray;
+        this.images[0].maxarray = result.maxarray;
 
-	this.reload();
+this.reload();
 
-	if( this.navigation ) this.navigation.setImage( this.protocol.getThumbnailURL( this.server, image, this.navigation.size.x ) );
+if( this.navigation ) this.navigation.setImage( this.protocol.getThumbnailURL( this.server, image, this.navigation.size.x ) );
 
       }.bind(this),
-	onFailure: function(){ alert('Error: Unable to get image metadata from server!'); }
+onFailure: function(){ alert('Error: Unable to get image metadata from server!'); }
     } );
 
+    var _this = this;
+    var minmax = Array(this.images.length-1);
+    for (var i=1; i<this.images.length ; i++) {
+      minmax[i] = new Request({
+      method: 'get',
+      url: _this.protocol.getMinMaxURL( _this.server, _this.images[i].src ),
+      onComplete: function(transport){
+	var response = transport || alert( "Error: No response from server " + _this.server );
+
+	// Parse the result
+	var result = _this.protocol.parseMinMax( response );
+        var j = minmax.indexOf(this);
+        if (j>0) {
+          _this.images[j].minarray = result.minarray;
+          _this.images[j].maxarray = result.maxarray;
+        }
+      },
+      onFailure: function(){ alert('Error: Unable to get image minmax from server!'); }
+      });
+
+      // Send the minmax request
+      minmax[i].send();
+    }
     // Send the metadata request
     metadata.send();
   },
@@ -1315,7 +1456,7 @@ var minmin = ''; var maxmax = '';
 
 
   /* Use an AJAX request to get the image size, tile size and number of resolutions from the server
-   */
+*/
   load: function(){
 
     // If we have supplied the relevent information, simply use the given data
@@ -1327,22 +1468,50 @@ var minmin = ''; var maxmax = '';
     }
     else{
       var metadata = new Request({
-	method: 'get',
-	url: this.protocol.getMetaDataURL( this.server, this.images[0].src ),
-	onComplete: function(transport){
-	  var response = transport || alert( "Error: No response from server " + this.server );
+method: 'get',
+url: this.protocol.getMetaDataURL( this.server, this.images[0].src ),
+onComplete: function(transport){
+var response = transport || alert( "Error: No response from server " + this.server );
 
-	  // Parse the result
-	  var result = this.protocol.parseMetaData( response );
-	  this.max_size = result.max_size;
-	  this.tileSize = result.tileSize;
-	  this.num_resolutions = result.num_resolutions;
+// Parse the result
+var result = this.protocol.parseMetaData( response );
+this.max_size = result.max_size;
+this.tileSize = result.tileSize;
+this.num_resolutions = result.num_resolutions;
+          this.images[0].minarray = result.minarray;
+          this.images[0].maxarray = result.maxarray;
 
-	  this.createWindows();
+this.createWindows();
         }.bind(this),
-	onFailure: function(){ alert('Error: Unable to get image metadata from server!'); }
+onFailure: function(){ alert('Error: Unable to get image metadata from server!'); }
       });
 
+      if (this.showMinMaxControl) {
+        var _this = this;
+        var minmax = Array(this.images.length-1);
+        for (var i=1; i<this.images.length ; i++) {
+          minmax[i] = new Request({
+	    method: 'get',
+            async: true,
+	    url: _this.protocol.getMinMaxURL( _this.server, _this.images[i].src ),
+	    onComplete: function(transport){
+	      var response = transport || alert( "Error: No response from server " + _this.server );
+
+	      // Parse the result
+	      var result = _this.protocol.parseMinMax( response );
+              var j = minmax.indexOf(this);
+              if (j>0) {
+                _this.images[j].minarray = result.minarray;
+                _this.images[j].maxarray = result.maxarray;
+              }
+            },
+	    onFailure: function(){ alert('Error: Unable to get image minmax from server!'); }
+          });
+
+          // Send the minmax request
+          minmax[i].send();
+        }
+      }
       // Send the metadata request
       metadata.send();
     }
@@ -1350,19 +1519,16 @@ var minmin = ''; var maxmax = '';
 
 
   /* Reflow our viewer after a resize
-   */
+*/
   reflow: function(){
-
+    
+    this.containerPosition = this.container.getPosition();
     var target_size = this.container.getSize();
     this.view.w = target_size.x;
     this.view.h = target_size.y;
 
     // Constrain our canvas if it is smaller than the view window
-    this.canvas.setStyles({
-      left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
-      top: (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
-    });
-
+    this.positionCanvas();
 
     // Calculate our new navigation window size
     if( this.navigation ){
@@ -1376,17 +1542,17 @@ var minmin = ''; var maxmax = '';
       this.scale.reflow(this.container);
     }
 
+    // Update images
     this.requestImages();
-    if( this.navigation ){
-      this.navigation.update(this.view.x/this.wid,this.view.y/this.hei,this.view.w/this.wid,this.view.h/this.hei);
-    }
+    this.updateNavigation();
+
     this.constrain();
 
   },
 
 
   /* Reload our view
-   */
+*/
   reload: function(){
 
     // First cancel any effects on the canvas and delete the tiles within
@@ -1404,7 +1570,7 @@ var minmin = ''; var maxmax = '';
     }
     // Center our view or move to initial viewport position
     if( this.viewport && this.viewport.x!=null && this.viewport.y!=null ){
-      this.moveTo( this.viewport.x*this.wid-(this.view.w/2), this.viewport.y*this.hei-(this.view.h/2) );
+      this.centerTo( this.viewport.x, this.viewport.y );
     }
     else this.recenter();
 
@@ -1426,7 +1592,7 @@ var minmin = ''; var maxmax = '';
 
 
   /* Recenter the image view
-   */
+*/
   recenter: function(){
 
     // Calculate the x,y for a centered view, making sure we have no negative
@@ -1438,40 +1604,55 @@ var minmin = ''; var maxmax = '';
     this.view.y = (yoffset<0)? 0 : yoffset;
 
     // Center our canvas, taking into account images smaller than the viewport
-    this.canvas.setStyles({
-      left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
-      top : (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
-    });
-
+    this.positionCanvas();
     this.constrain();
 
   },
 
 
   /* Constrain the movement of our canvas to our containing div
-   */
+*/
   constrain: function(){
 
     var ax = this.wid<this.view.w ? Array(Math.round((this.view.w-this.wid)/2), Math.round((this.view.w-this.wid)/2)) : Array(this.view.w-this.wid,0);
     var ay = this.hei<this.view.h ? Array(Math.round((this.view.h-this.hei)/2), Math.round((this.view.h-this.hei)/2)) : Array(this.view.h-this.hei,0);
-
     this.touch.options.limit = { x: ax, y: ay };
   },
 
+
+  /* Correctly position the canvas, taking into account images smaller than the viewport
+*/
+  positionCanvas: function(){
+    this.canvas.setStyles({
+      left: (this.wid>this.view.w)? -this.view.x : Math.round((this.view.w-this.wid)/2),
+      top : (this.hei>this.view.h)? -this.view.y : Math.round((this.view.h-this.hei)/2)
+    });
+  },
+
+
+  /* Update navigation window
+*/
+  updateNavigation: function(){
+    if( this.navigation ){
+      var view = this.getView();
+      this.navigation.update( view.x/this.wid, view.y/this.hei, view.w/this.wid, view.h/this.hei );
+    }
+  }
+
 });
-window['IIPMooViewer'] = IIPMooViewer;
+
 
 
 /* Static function for synchronizing iipmooviewer instances
- */
+*/
 IIPMooViewer.synchronize = function(viewers){
   this.sync = viewers;
 };
 
 
 /* Static function get get an array of the windows that are
-   synchronized to this one
- */
+synchronized to this one
+*/
 IIPMooViewer.windows = function(s){
   if( !this.sync || !this.sync.contains(s) ) return Array();
   return this.sync.filter( function(t){
@@ -1481,11 +1662,16 @@ IIPMooViewer.windows = function(s){
 
 
 /* Add a little convenience variable to detect buggy IE versions
- */
+*/
 if( Browser.ie && Browser.version<9 ) Browser.buggy = true;
 else Browser.buggy = false;
 
 
+/* Add hash change event to our Mootools native event list
+*/
+Element.NativeEvents.hashchange = 1;
+
+
 /* Setup our list of protocol objects
- */
+*/
 if(typeof Protocols === 'undefined') var Protocols = {};

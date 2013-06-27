@@ -1,6 +1,7 @@
 /* controls window */
 div.controls {
   position: absolute;
+  width: 100%!important;
   padding: 0px;
   background: #222;
   opacity: 0.70;
@@ -85,17 +86,70 @@ div.blendknob {
 
 p.mintext {
       position: relative;
-      /*left: 50%;*/
-      top: 10px;
+      bottom: 0px;
+      left: 3%;
+      width: 40%;
 }
 
 p.maxtext {
       position: relative;
-      left: 50%;
-      top: -25px;
+      bottom: 40px;
+      right: -50%;
+      width: 40%;
 }
 
-input {
-    width:35px;
+
+.SpinButtonContainer {
+    width: 100%;
+    padding-left: 3px;
+    position: relative;
+    -moz-border-radius: 3px 3px 3px 3px;
+    -webkit-border-radius: 3px 3px 3px 3px;
+    border-radius: 3px 3px 3px 3px;
+}
+
+.SpinButtonInput {
+    font-size: 100%;
+    width: 68%;
+    height: 100%;
+    border: none;
+}
+
+.SpinButtonInput:focus {
+    outline: 2px dotted #cc0000;
+}
+
+.SpinButtonDown {
+    text-align: center;
+    vertical-align: bottom;
+    font-size: 100%;
+    cursor:pointer;
+    top: 0px;
+    right: 15%;
+    width: 15%;
+    height: 100%;
+    position: absolute;
+    color: black;
+    background-color: #bbbbbb;
+}
+
+.SpinButtonDown:hover {
+    background-color: #ffffff;
+}
+
+.SpinButtonUp {
+    text-align: center;
+    cursor:pointer;
+    top: 0px;
+    right: 0px;
+    width: 15%;
+    height: 100%;
+    position: absolute;
+    color: black;
+    background-color: #bbbbbb;
+}
+
+.SpinButtonUp:hover {
+    background-color: #ffffff;
 }
 

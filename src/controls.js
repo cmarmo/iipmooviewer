@@ -2,7 +2,8 @@
    IIPMooViewer 2.0 - Controls Extensions
    IIPImage Javascript Viewer <http://iipimage.sourceforge.net>
 
-   Copyright (c) 2012 Chiara Marmo <cmarmo@users.sourceforge.net>
+   Copyright (c) 2012-2013 Chiara Marmo <cmarmo@users.sourceforge.net>
+			   Emmanuel Bertin
 
    ---------------------------------------------------------------------------
 
@@ -57,43 +58,47 @@ IIPMooViewer.implement({
 
     var slider = Array(this.images.length);
     for (i=0; i<this.images.length; i++){
-      var imdiv = this.controlsWindow.getElementById('imname'+i);
-      var conPar = new Element('p', {
-        'id': 'conslider'+i,
-        'class': 'text',
-        'html': 'Contrast: <span id="contrast-factor'+i+'"></span>',
-        'styles': { 'position': 'relative',
-                    'bottom' : '15px'}
-      }).inject(imdiv);
-      var area = new Element('div', {
-          'id': 'conarea'+i,
-          'class': 'conarea',
+      if (this.images[i].ccontrol) {
+        var imdiv = this.controlsWindow.getElementById('imname'+i);
+        var conPar = new Element('p', {
+          'id': 'conslider'+i,
+          'class': 'text',
+          'html': 'Contrast: <span id="contrast-factor'+i+'"></span>',
           'styles': { 'position': 'relative',
-                    'bottom' : '15px'}
-      }).inject(imdiv);
-      var knob = new Element('div', {
-         'id': 'conknob'+i,
-         'class': 'conknob'
-      }).inject(area);
-      var _this = this;
-      slider[i] = new Slider( area, knob, {
-         range: [0,100],
-         onComplete: function(pos){
-           newcnt = 1.0 + pos/100;
-           var j = slider.indexOf(this);
-           if (j!=-1) {
-             document.getElementById('contrast-factor'+j).setStyle('font-weight', 'bold');
-             document.getElementById('contrast-factor'+j).set('html', newcnt.toFixed(2) + 'x');
-             _this.images[j].cnt=newcnt;
-             _this.requestImages();
-           } else {
-             document.getElementById('contrast-factor'+i).setStyle('font-weight', 'bold');
-             document.getElementById('contrast-factor'+i).set('html', '1x');
+                      'bottom' : '15px'}
+        }).inject(imdiv);
+        var area = new Element('div', {
+            'id': 'conarea'+i,
+            'class': 'conarea',
+            'styles': { 'position': 'relative',
+                      'bottom' : '15px'}
+        }).inject(imdiv);
+        var knob = new Element('div', {
+           'id': 'conknob'+i,
+           'class': 'conknob'
+        }).inject(area);
+        var _this = this;
+        slider[i] = new Slider( area, knob, {
+           range: [0,100],
+           onComplete: function(pos){
+             newcnt = 1.0 + pos/100;
+             var j = slider.indexOf(this);
+             if (j!=-1) {
+               document.getElementById('contrast-factor'+j).setStyle('font-weight', 'bold');
+               document.getElementById('contrast-factor'+j).set('html', newcnt.toFixed(2) + 'x');
+               _this.images[j].cnt=newcnt;
+               _this.requestImages();
+             } else {
+               document.getElementById('contrast-factor'+i).setStyle('font-weight', 'bold');
+               document.getElementById('contrast-factor'+i).set('html', '1x');
+             }
            }
-         }
-      });
-      slider[i].set(0);   
-    }
+        });
+        slider[i].set(0);   
+      } else {
+      slider[i] = 0;
+      }
+    } 
   },
 
   // Create gamma controls
@@ -102,166 +107,119 @@ IIPMooViewer.implement({
 
     var slider = Array(this.images.length);
     for (i=0; i<this.images.length; i++){
-      var imdiv = this.controlsWindow.getElementById('imname'+i);
-      var gamPar = new Element('p', {
-        'id': 'gamslider'+i,
-        'class': 'text',
-        'html': 'Set display gamma: <span id="gamma-factor'+i+'"></span>'
-      }).inject(imdiv);
-      var area = new Element('div', {
-          'id': 'gamarea'+i,
-          'class': 'gamarea'
-      }).inject(imdiv);
-      var knob = new Element('div', {
-         'id': 'gamknob'+i,
-         'class': 'gamknob'
-      }).inject(area);
-      var _this = this;
-      slider[i] = new Slider( area, knob, {
-         range: [50,300],
-         onComplete: function(pos){
-           newgam = pos/100;
-           var j = slider.indexOf(this);
-           if (j!=-1) {
-             document.getElementById('gamma-factor'+j).setStyle('font-weight', 'bold');
-             document.getElementById('gamma-factor'+j).set('html', newgam.toFixed(2));
-             _this.images[j].gam=(1./newgam).toFixed(2);
-             _this.requestImages();
-           } else {
-             document.getElementById('gamma-factor'+i).setStyle('font-weight', 'bold');
-             document.getElementById('gamma-factor'+i).set('html', '2.20');
+      if (this.images[i].gcontrol) {
+        var imdiv = this.controlsWindow.getElementById('imname'+i);
+        var gamPar = new Element('p', {
+          'id': 'gamslider'+i,
+          'class': 'text',
+          'html': 'Set display gamma: <span id="gamma-factor'+i+'"></span>'
+        }).inject(imdiv);
+        var area = new Element('div', {
+            'id': 'gamarea'+i,
+            'class': 'gamarea'
+        }).inject(imdiv);
+        var knob = new Element('div', {
+           'id': 'gamknob'+i,
+           'class': 'gamknob'
+        }).inject(area);
+        var _this = this;
+        slider[i] = new Slider( area, knob, {
+           range: [50,300],
+           onComplete: function(pos){
+             newgam = pos/100;
+             var j = slider.indexOf(this);
+             if (j!=-1) {
+               document.getElementById('gamma-factor'+j).setStyle('font-weight', 'bold');
+               document.getElementById('gamma-factor'+j).set('html', newgam.toFixed(2));
+               _this.images[j].gam=(1./newgam).toFixed(2);
+               _this.requestImages();
+             } else {
+               document.getElementById('gamma-factor'+i).setStyle('font-weight', 'bold');
+               document.getElementById('gamma-factor'+i).set('html', _this.images[i].gam);
+             }
            }
-         }
-      });
-      slider[i].set(220);   
-    }
+        });
+        slider[i].set(_this.images[i].gam*100);   
+      } else {
+      slider[i] = 0;
+      }
+    } 
   },
 
   // Create min max controls
+
   CreateMinMaxControl: function() {
     if ( !this.controlsWindow ) this.CreateControlWin();
 
-    var minmaxreq = Array(this.images.length);
-
-    var minslider = Array(this.images.length);
-    var maxslider = Array(this.images.length);
     var minInp = Array(this.images.length);
     var maxInp = Array(this.images.length);
+    var minSpinbutton = Array(this.images.length);
+    var maxSpinbutton = Array(this.images.length);
 
     for (i=0; i<this.images.length; i++){
 
-      var _this = this;
-      var imdiv = this.controlsWindow.getElementById('imname'+i);
-      var minPar = new Element('p', {
-        'id': 'minslider'+i,
-        'class': 'mintext',
-        'html': 'min: '
-      }).inject(imdiv);
-      minInp[i] = new Element('input',{
-	'id': 'minimum'+i,
-        'value': 0
-      }).inject(minPar);
-      var maxPar = new Element('p', {
-        'id': 'maxslider'+i,
-        'class': 'maxtext',
-        'html': 'max: '
-      }).inject(imdiv);
-      maxInp[i] = new Element('input',{
-	'id': 'maximum'+i,
-        'value': 0
-      }).inject(maxPar);
-
-      var minarea = new Element('div', {
+      if (this.images[i].mmcontrol) {
+        var _this = this;
+        var imdiv = this.controlsWindow.getElementById('imname'+i);
+        var minPar = new Element('p', {
           'id': 'minarea'+i,
-          'class': 'minarea'
-      }).inject(imdiv);
-      var minknob = new Element('div', {
-         'id': 'minknob'+i,
-         'class': 'minknob'
-      }).inject(minarea);
-      minslider[i] = new Slider( minarea, minknob, {
-         range: [-10,100],
-         onComplete: function(pos){
-           var newmin = pos;
-           var jmin = minslider.indexOf(this);
-           if (jmin>-1) {
-             document.getElementById('minimum'+jmin).set('value', newmin);
-             _this.images[jmin].minarray[0]=newmin;
-             _this.requestImages();
-           }
-         }
-      });
-
-      var maxarea = new Element('div', {
+          'class': 'mintext',
+          'html': 'min: '
+        }).inject(imdiv);
+        minInp[i] = new Element('input',{
+	  'id': 'minimum'+i,
+          'value': this.images[i].minarray[0]
+        }).inject(minPar);
+        var maxPar = new Element('p', {
           'id': 'maxarea'+i,
-          'class': 'maxarea'
-      }).inject(imdiv);
-      var maxknob = new Element('div', {
-         'id': 'maxknob'+i,
-         'class': 'maxknob'
-      }).inject(maxarea);
-      maxslider[i] = new Slider( maxarea, maxknob, {
-         range: [-10,100],
-         onComplete: function(pos){
-           var newmax = pos;
-           var jmax = maxslider.indexOf(this);
-           if (jmax>-1) {
-             document.getElementById('maximum'+jmax).set('value', newmax);
-             _this.images[jmax].maxarray[0]=newmax;
-             _this.requestImages();
-           }
-         }
-      });
+          'class': 'maxtext',
+          'html': 'max: '
+        }).inject(imdiv);
+        maxInp[i] = new Element('input',{
+	  'id': 'maximum'+i,
+          'value': this.images[i].maxarray[0]
+        }).inject(maxPar);
 
-      // Send the minmax request
-      this.images[i].minarray = new Array();
-      this.images[i].maxarray = new Array();
-      minmaxreq[i] = new Request(
-        {
-	method: 'get',
-	url: _this.server,
-  	onComplete: function(transport){
-	  var response = transport || alert( "Error: No response from server " + _this.server );
-	  // Parse the result
-          var result = _this.protocol.parseMinMax( response );
-          var j = minmaxreq.indexOf(this);
-          if (j>-1) {
-            _this.images[j].minarray = result.minarray;
-            _this.images[j].maxarray = result.maxarray;
-//console.log(_this.images[j].minarray[0]);
-            document.getElementById('minimum'+j).set('value', _this.images[j].minarray[0]);
-            document.getElementById('maximum'+j).set('value', _this.images[j].maxarray[0]);
-            minslider[j].set(_this.images[j].minarray[0]);
-            maxslider[j].set(_this.images[j].maxarray[0]);
+        minSpinbutton[i] = new Spinbutton({
+          'start':_this.images[i].minarray[0],
+          'min':-1000000.0,
+          'max':1000000.0,
+          'stepsize':0.1,
+          'incrementalStep':10.0,
+          'spinbutton':minInp[i],
+          'onchange': function(value){
+             var j = (this.spinbutton.id).split("minimum")[1];
+             if (j>-1) {
+               _this.images[j].minarray[0] = value;
+               _this.requestImages();
+	     }
           }
-        },
-	onFailure: function(){ alert('Error: Unable to get image minimum and maximum from server!'); }
-	} );
+        });
 
+        maxSpinbutton[i] = new Spinbutton({
+          'start':_this.images[i].maxarray[0],
+          'min':-1000000.0,
+          'max':1000000.0,
+          'stepsize':0.1,
+          'incrementalStep':10.0,
+          'spinbutton':maxInp[i],
+          'onchange': function(value){
+             var j = (this.spinbutton.id).split("maximum")[1];
+             if (j>-1) {
+               _this.images[j].maxarray[0] = value;
+               _this.requestImages();
+	     }
+          }
+        });
+      } else {
+        minInp[i] = 0;
+        maxInp[i] = 0;
+        minSpinbutton[i] = 0;
+        maxSpinbutton[i] = 0;
+      }
 
-      minInp[i].addEvent('change', function(){
-           var jmin = minInp.indexOf(this);
-           if (jmin>-1) {
-             minslider[jmin].set(this.value);
-             _this.images[jmin].minarray[0]=this.value;
-             _this.requestImages();
-	   }
-      });
-      maxInp[i].addEvent('change', function(){
-           var jmax = maxInp.indexOf(this);
-           if (jmax>-1) {
-             maxslider[jmax].set(this.value);
-             _this.images[jmax].maxarray[0]=this.value;
-             _this.requestImages();
-	   }
-      });
-
-      minmaxreq[i].send( this.protocol.getMinMaxURL(this.images[i].src) );
-//console.log(this.images[i].minarray[0]);
-//console.log(this.images[i].maxarray[0]);
     }
   },
-
 
   // Create opacity controls
   CreateOpacityControl: function() {
@@ -269,38 +227,42 @@ IIPMooViewer.implement({
 
     var slider = Array(this.images.length);
     for (i=0; i<this.images.length; i++){
-      var imdiv = this.controlsWindow.getElementById('imname'+i);
-      var opaPar = new Element('p', {
-        'id': 'opaslider'+i,
-        'class': 'text',
-        'html': 'Set image opacity: <span id="opacity-value'+i+'"></span>'
-      }).inject(imdiv);
-      var area = new Element('div', {
+      if (this.images[i].ocontrol) {
+        var imdiv = this.controlsWindow.getElementById('imname'+i);
+        var opaPar = new Element('p', {
+          'id': 'opaslider'+i,
+          'class': 'text',
+          'html': 'Set image opacity: <span id="opacity-value'+i+'"></span>'
+        }).inject(imdiv);
+        var area = new Element('div', {
           'id': 'opaarea'+i,
           'class': 'opaarea'
-      }).inject(imdiv);
-      var knob = new Element('div', {
-         'id': 'opaknob'+i,
-         'class': 'opaknob'
-      }).inject(area);
-      var _this = this;
-      slider[i] = new Slider( area, knob, {
-         range: [0,100],
-         onComplete: function(pos){
-           newopa = 1.0 - pos/100;
-           var j = slider.indexOf(this);
-           if (j!=-1) {
-             document.getElementById('opacity-value'+j).setStyle('font-weight', 'bold');
-             document.getElementById('opacity-value'+j).set('html', newopa.toFixed(2));
-             _this.images[j].opacity=newopa;
-	     _this.canvas.getChildren('img').setStyle('opacity', newopa);
-           } else {
-             document.getElementById('opacity-value'+i).setStyle('font-weight', 'bold');
-             document.getElementById('opacity-value'+i).set('html', '1');
-           }
-         }
-      });
-      slider[i].set(0);   
+        }).inject(imdiv);
+        var knob = new Element('div', {
+          'id': 'opaknob'+i,
+          'class': 'opaknob'
+        }).inject(area);
+        var _this = this;
+        slider[i] = new Slider( area, knob, {
+          range: [0,100],
+          onChange: function(pos){
+            newopa = 1.0 - pos/100;
+            var j = slider.indexOf(this);
+            if (j!=-1) {
+              document.getElementById('opacity-value'+j).setStyle('font-weight', 'bold');
+              document.getElementById('opacity-value'+j).set('html', newopa.toFixed(2));
+              _this.images[j].opacity=newopa;
+	      _this.canvas.getChildren('img.layer'+j).setStyle('opacity', newopa);
+            } else {
+              document.getElementById('opacity-value'+i).setStyle('font-weight', 'bold');
+              document.getElementById('opacity-value'+i).set('html', '1');
+            }
+          }
+        });
+        slider[i].set(100 *(1-this.images[i].opacity));
+      } else {
+        slider[i] = 0;
+      }
     }
   },
 
@@ -323,16 +285,13 @@ IIPMooViewer.implement({
     var slider = new Slider( area, knob, {
         range: [0,100],
         mode: 'vertical',
-        onComplete: function(pos){
+        onChange: function(pos){
            var dop = 100 / (_this.images.length-1);
            _this.images[0].opacity = 1;
 
            for (var i=1; i<_this.images.length; i++){
              _this.images[i].opacity = (pos > i*dop)? 1:(pos/dop)-i+1;
-	     var img = _this.canvas.getChildren('img');
-	     for (var j=0; j<img.length; j++) {
-               if (img[j].hasClass('layer'+i)) img[j].setStyle('opacity', _this.images[i].opacity);
-             }
+	     _this.canvas.getChildren('img.layer'+i).setStyle('opacity', _this.images[i].opacity);
            }
         }
     });
@@ -365,15 +324,11 @@ IIPMooViewer.implement({
                if (t!=j) {
 		 _this.images[t].opacity=0;
                  pradio[t].checked=false;
-	         for (var l=0; l<img.length; l++) {
-                   if (img[l].hasClass('layer'+t)) img[l].setStyle('opacity', _this.images[t].opacity);
-                 }
+	         _this.canvas.getChildren('img.layer'+t).setStyle('opacity', _this.images[t].opacity);
                }
                pradio[j].set('checked','true');
                _this.images[j].opacity = 1.0;
-	       for (var l=0; l<img.length; l++) {
-                 if (img[l].hasClass('layer'+j)) img[l].setStyle('opacity', _this.images[j].opacity);
-               }
+	       _this.canvas.getChildren('img.layer'+j).setStyle('opacity', _this.images[j].opacity);
              }
 	   }  
        });
