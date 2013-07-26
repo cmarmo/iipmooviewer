@@ -23,8 +23,8 @@ IIPMooViewer.implement({
 
       // Create display FITS header button and div
       CreateHeaderDisplay: function() {
-        if ( !this.controlsWindow ) this.CreateControlWin();
 
+        if ( !this.controlsWindow ) this.CreateControlWin();
         var headdiv = new Element ( 'div', {
             'id' : 'header',
             'class': 'tip',
@@ -96,7 +96,6 @@ IIPMooViewer.implement({
         for (i=0; i<this.images.length; i++){
 
           var imdiv = this.controlsWindow.getElementById('imname'+i);
-
           button[i] = new Element( 'button', {
             'class': 'headerfits',
             'html': 'FITS header',
@@ -111,77 +110,95 @@ IIPMooViewer.implement({
         }
       },
 
-      // Create coordinate display div
-      CreateCoordDisplay: function(coord,linproj,proj) {
-        if ( !this.controlsWindow ) this.CreateControlWin();
-        this.FindKeywords();
- 
-       var coordtable = new Element( 'table', {
-          'html': '<tr><td id="cel1">=</td><td id="celx"></td></tr><tr><td id="cel2"></td><td id="cely"></td></tr>'
-          //'html': '<tr><th>x</th><th>y</th><th id="cel1">l</th><th id="cel2">b</th></tr><tr><td id="x"></td><td id="y"></td><td id="celx"></td><td id="cely"></td></tr>'
-        }).inject(this.controlsWindow);
-
-
-        if (coord == 'lonlat') {
-          document.getElementById("cel1").innerHTML= 'l=';
-          document.getElementById("cel2").innerHTML= 'b=';
-        } else if (coord == 'radec') {
-          document.getElementById("cel1").innerHTML= 'RA=';
-          document.getElementById("cel2").innerHTML= 'DEC=';
-        }
-        // Catching coordinates on canvas
-        var _this = this;
-        //imagezone = document.getElementById("images");
-        this.canvas.addEvent('mousemove', function(e) {
-                 var offsetx = parseFloat(this.getStyle('left'));
-                 var offsety = parseFloat(this.getStyle('top'));
-                 var res = Math.pow(2,_this.num_resolutions-_this.view.res-1);
-                 var x = (e.client.x - offsetx + _this.view.x)*res;
-                 var y = _this.max_size.h - (e.client.y - offsety + _this.view.y)*res;
-                 //document.getElementById("x").innerHTML= x ;
-                 //document.getElementById("y").innerHTML= y ;
-                 var xycoord = linproj.linp2x([x, y]);
-                 var newcoord = proj.prjx2s(xycoord,1);
-                 document.getElementById("celx").innerHTML= newcoord[0].toFixed(4);
-                 document.getElementById("cely").innerHTML= newcoord[1].toFixed(4);
-          });
-      },
 
       // Parsing keywords
-
       FindKeywords: function() {
-        var _this = this;
+        var param;
         var headerreq = new Request(
             {
 	    method: 'get',
-	    url: _this.server,
+	    async: false,
+	    url: this.server + '?FIF=' + this.images[0].src + '&obj=subject',
   	    onComplete: function(transport){
 	         var response = transport || alert( "Error: No response from server " + _this.server );
                  var header = new FITSHeader ({ format : 'asciistream' });
                  var keywords = header.parseAsciiStream(response);
-console.log(keywords.length );
                  for (var i = 0; i<keywords.length ; i++) {
                    if (keywords[i].keyname == 'NAXIS') {
                      var naxis = keywords[i].keyvalue;
+                     var ctype = new Array(naxis);
                      var crpix = new Array(naxis);
+                     var crval = new Array(naxis);
                      var cdelt = new Array(naxis);
+		     for (var j = 0; j< naxis; j++) { cdelt[j] = 1; }
+                     var crota = 0;
+                     var cd = new Array(naxis*naxis);
+		     for (var j = 0; j< naxis*naxis; j= j+3) { cd[j] = 1; }
+		     for (var j = 1; j< naxis*naxis-1; j++) { cd[j] = 0; }
                      var pc = new Array(naxis*naxis);
                      continue;
                    }
+                   if (keywords[i].keyname == 'CTYPE1') { ctype[0] = keywords[i].keyvalue; continue; }
+                   if (keywords[i].keyname == 'CTYPE2') { ctype[1] = keywords[i].keyvalue; continue; }
                    if (keywords[i].keyname == 'CRPIX1') { crpix[0] = keywords[i].keyvalue; continue; }
                    if (keywords[i].keyname == 'CRPIX2') { crpix[1] = keywords[i].keyvalue; continue; }
                    if (keywords[i].keyname == 'CDELT1') { cdelt[0] = keywords[i].keyvalue; continue; }
                    if (keywords[i].keyname == 'CDELT2') { cdelt[1] = keywords[i].keyvalue; continue; }
-                   if (keywords[i].keyname == 'CRVAL1') { phi0 = keywords[i].keyvalue; continue; }
-                   if (keywords[i].keyname == 'CRVAL2') { theta0 = keywords[i].keyvalue; continue; }
+                   if (keywords[i].keyname == 'CROTA1') { crota = keywords[i].keyvalue; continue; }
+                   if (keywords[i].keyname == 'CROTA2') { crota = keywords[i].keyvalue; continue; }
+                   if (keywords[i].keyname == 'CRVAL1') { crval[0] = keywords[i].keyvalue; continue; }
+                   if (keywords[i].keyname == 'CRVAL2') { crval[1] = keywords[i].keyvalue; continue; }
+                   if (keywords[i].keyname == 'CD1_1') { cd[0] = keywords[i].keyvalue; continue; }
+                   if (keywords[i].keyname == 'CD1_2') { cd[1] = keywords[i].keyvalue; continue; }
+                   if (keywords[i].keyname == 'CD2_1') { cd[2] = keywords[i].keyvalue; continue; }
+                   if (keywords[i].keyname == 'CD2_2') { cd[3] = keywords[i].keyvalue; continue; }
+                   if (keywords[i].keyname == 'LONPOLE') { lonpole = keywords[i].keyvalue; continue; }
+                   if (keywords[i].keyname == 'LATPOLE') { latpole = keywords[i].keyvalue; continue; }
                  }
-                 var valproj = [naxis, crpix, cdelt, phi0, theta0];
-                 return valproj; 
+		 var coord = (((ctype[0]).split("-")[0]).replace('\'','') == 'GLON') ? 'lonlat' : 'radec';
+                 var myproj = ((ctype[0]).slice('-4')).replace('\'','');
+		 cdelt[0] = cd[0]*cdelt[0];
+		 cdelt[1] = cd[3]*cdelt[1]; 
+                 pc[0] = cd[0] * Math.cos(crota*Math.PI/180) ;
+		 pc[1] = - Math.sin(crota*Math.PI/180);
+		 pc[2] = Math.sin(crota*Math.PI/180);
+                 pc[3] = cd[3] * Math.cos(crota*Math.PI/180);
+		 param = {coord: coord, proj: myproj,
+			  naxis: naxis, crpix: crpix,
+			  crval: crval, cdelt: cdelt, pc: pc};
             },
 	    onFailure: function(){ alert('Error: Unable to get header image from server!'); }
 	});
-        headerreq.send( "FIF=" + this.images[0].src + "&obj=subject");
+        headerreq.send(); 
+	return param;
       },
+
+      /* define the image projection */
+      DefineProjection: function(param){
+    	this.linproj = new CoordTransf.Linear({naxis: param.naxis, crpix: param.crpix, pc: param.pc, cdelt: param.cdelt});
+        if (param.coord == 'lonlat') { this.lon = 'l'; this.lat = 'b'; }
+	else if (param.coord == 'radec') { this.lon = 'RA'; this.lat = 'DEC'; }
+
+	switch (param.proj) {
+          case 'AIT':
+            this.proj = new Projections.Aitoff({naxis: param.naxis});
+            break;
+          case 'TAN':
+            this.proj = new Projections.Gnomonic({naxis: param.naxis, crval: param.crval});
+            break;
+                }
+      },
+
+      /* Transform resolution independent coordinates to coordinate system */
+      transformCoords: function( x, y ){
+
+        // Calculate celestial coordinates using header astrometry
+        var xycoord = this.linproj.linp2x([x*this.max_size.w, (1 - y) * this.max_size.h]);
+        var newcoord = this.proj.prjx2s(xycoord,1);
+
+        var text = this.lon + " = " + newcoord[0].toFixed(4) + " " + this.lat + " = " + newcoord[1].toFixed(4);
+          return text;   
+    },
 
 });
 
