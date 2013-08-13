@@ -36,30 +36,11 @@ div.blendarea {
       background: transparent;
       border: 1px solid #bbbbbb;
       position: absolute;
-      right: 5px;
+      left: -20px;
       width: 12px;
+      height: 90%;
 }
 
-div.minarea {
-      position: relative;
-      text-align: left;
-      background: transparent;
-      border: 1px solid #bbbbbb;
-      width: 42%;
-      height: 12px;
-      top: -31px;
-}
-
-div.maxarea  {
-      position: relative;
-      margin-right: 0px;
-      background: transparent;
-      border: 1px solid #bbbbbb;
-      width: 42%;
-      height: 12px;
-      top: -45px;
-      left: 50%;
-}
 div.conknob, div.opaknob, div.gamknob, div.minknob, div.maxknob {
       color: white;
       height: 12px;

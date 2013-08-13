@@ -204,15 +204,13 @@ div#title {
 
 .navcontainer .coords {
 	position:absolute;
-	left:50%;
-	width:auto;
+	width:100%;
 	background:transparent}
 
 .navcontainer .coords div {
 	font-size:6pt;
 	color:#bbb;
 	position:relative;
-	left:-50%;
 	background:#111;
 	padding:0 .3em .2em .3em;
 	width:auto;

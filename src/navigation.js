@@ -104,26 +104,7 @@ var Navigation = new Class({
         }
       });
       this.zone.inject(navwin);
-
-      if( this.options.showCoords ){
-	// Create our coordinates viewer
-	this.coords = new Element('div', {
-	  'class': 'coords',
-          'html': '<div></div>',
-          'styles': {
-	    top: this.size.y - 6,
-	    opacity: 0.65
-           },
-           'tween': {
-             duration: 1000,
-             transition: Fx.Transitions.Sine.easeOut,
-	     link: 'cancel'
-           }
-        });
-        this.coords.inject(this.navcontainer);
-      }
     }
-
 
     // Create our nav buttons if requested
     if( this.options.showNavButtons ){
@@ -158,6 +139,27 @@ var Navigation = new Class({
       navbuttons.getElement('img.zoomOut').addEvent( 'click', function(){ _this.fireEvent('zoomOut'); });
       navbuttons.getElement('img.reset').addEvent( 'click', function(){ _this.fireEvent('reload'); });
 
+    }
+
+    // Create coordinate div if requested
+    if( this.options.showCoords ){
+	// Create our coordinates viewer
+	this.coords = new Element('div', {
+	  'class': 'coords',
+          'html': '<div></div>',
+          'styles': {
+	    position: 'static',
+	    /*top: this.size.y + 6,*/
+	    opacity: 0.65,
+	    visibility: 'hidden'
+           },
+           'tween': {
+             duration: 1000,
+             transition: Fx.Transitions.Sine.easeOut,
+	     link: 'cancel'
+           }
+        });
+        this.coords.inject(this.navcontainer);
     }
 
     // Add a progress bar only if we have the navigation window visible
